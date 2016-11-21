@@ -324,8 +324,29 @@ class SHAPE_POLY_SET : public SHAPE
 
         const BOX2I BBox( int aClearance = 0 ) const override;
 
+        /**
+         * Function PointOnEdge()
+         *
+         * Checks if point aP lies on an edge or vertex of some of the outlines or holes.
+         * @param aP is the point to check
+         * @return true if the point lies on the edge of any polygon.
+         */
+        bool PointOnEdge( const VECTOR2I& aP ) const;
+
+        /**
+         * Function Collide
+         * Checks whether the point aP collides with the inside of the polygon set; if the point
+         * lies on an edge or on a corner of any of the polygons, there is no collision: the edges
+         * does not belong to the polygon itself.
+         * @param  aP         is the VECTOR2I point whose collision with respect to the poly set
+         *                    will be tested.
+         * @param  aClearance is the security distance; if the point lies closer to the polygon
+         *                    than aClearance distance, then there is a collision.
+         * @return true if the point aP collides with the polygon; false in any other case.
+         */
+        bool Collide( const VECTOR2I& aP, int aClearance = 0 ) const override;
+
         // fixme: add collision support
-        bool Collide( const VECTOR2I& aP, int aClearance = 0 ) const override { return false; }
         bool Collide( const SEG& aSeg, int aClearance = 0 ) const override { return false; }
 
 
@@ -347,6 +368,25 @@ class SHAPE_POLY_SET : public SHAPE
 
         ///> Deletes aIdx-th polygon from the set
         void DeletePolygon( int aIdx );
+
+        /**
+         * Function Chamfer
+         * Returns a chamfered version of the aIndex-th polygon.
+         * @param aDistance is the chamfering distance.
+         * @param aIndex is the index of the polygon to be chamfered.
+         * @return A POLYGON object containing the chamfered version of the aIndex-th polygon.
+         */
+        POLYGON ChamferPolygon( unsigned int aDistance, int aIndex = 0 );
+
+        /**
+         * Function Fillet
+         * Returns a filleted version of the aIndex-th polygon.
+         * @param aRadius is the fillet radius.
+         * @param aSegments is the number of segments / fillet.
+         * @param aIndex is the index of the polygon to be filleted
+         * @return A POLYGON object containing the filleted version of the aIndex-th polygon.
+         */
+        POLYGON FilletPolygon( unsigned int aRadius, unsigned int aSegments, int aIndex = 0 );
 
     private:
 
@@ -380,6 +420,47 @@ class SHAPE_POLY_SET : public SHAPE
 
         const ClipperLib::Path convertToClipper( const SHAPE_LINE_CHAIN& aPath, bool aRequiredOrientation );
         const SHAPE_LINE_CHAIN convertFromClipper( const ClipperLib::Path& aPath );
+
+        /**
+         * containsSingle function
+         * Checks whether the point aP is inside the aSubpolyIndex-th polygon of the polyset. If
+         * the points lies on an edge, the polygon is considered to contain it.
+         * @param  aP            is the VECTOR2I point whose position with respect to the inside of
+         *                       the aSubpolyIndex-th polygon will be tested.
+         * @param  aSubpolyIndex is an integer specifying which polygon in the set has to be
+         *                       checked.
+         * @return bool - true if aP is inside aSubpolyIndex-th polygon; false in any other
+         *         case.
+         */
+        bool containsSingle( const VECTOR2I& aP, int aSubpolyIndex ) const;
+
+        /**
+         * Operations ChamferPolygon and FilletPolygon are computed under the private chamferFillet
+         * method; this enum is defined to make the necessary distinction when calling this method
+         * from the public ChamferPolygon and FilletPolygon methods.
+         */
+        enum CORNER_MODE
+        {
+            CHAMFERED,
+            FILLETED
+        };
+
+        /**
+         * Function chamferFilletPolygon
+         * Returns the camfered or filleted version of the aIndex-th polygon in the set, depending
+         * on the aMode selected
+         * @param  aMode     represent which action will be taken: CORNER_MODE::CHAMFERED will
+         *                   return a chamfered version of the polygon, CORNER_MODE::FILLETED will
+         *                   return a filleted version of the polygon.
+         * @param  aDistance is the chamfering distance if aMode = CHAMFERED; if aMode = FILLETED,
+         *                   is the filleting radius.
+         * @param  aIndex    is the index of the polygon that will be chamfered/filleted.
+         * @param  aSegments is the number of filleting segments if aMode = FILLETED. If aMode =
+         *                   CHAMFERED, it is unused.
+         * @return POLYGON - the chamfered/filleted version of the polygon.
+         */
+        POLYGON chamferFilletPolygon( CORNER_MODE aMode, unsigned int aDistance,
+                                      int aIndex, int aSegments = -1 );
 
         typedef std::vector<POLYGON> Polyset;
 
