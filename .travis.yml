@@ -1,0 +1,16 @@
+install:
+    - apt-get update
+    - apt-get install cmake make boost glew glut swig glm cairo
+
+language: cpp
+
+script:
+    - mkdir build
+    - cd build
+    - cmake ../
+    - make MyTests
+    - ./tests/MyTests
+
+compiler:
+    -clang
+    -gcc
