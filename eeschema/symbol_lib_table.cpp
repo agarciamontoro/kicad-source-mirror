@@ -1,9 +1,8 @@
 /*
  * This program source code file is part of KiCad, a free EDA CAD application.
  *
- * Copyright (C) 2010-2012 SoftPLC Corporation, Dick Hollenbeck <dick@softplc.com>
- * Copyright (C) 2012-2016 Wayne Stambaugh <stambaughw@gmail.com>
- * Copyright (C) 2012-2016 KiCad Developers, see AUTHORS.txt for contributors.
+ * Copyright (C) 2016 Wayne Stambaugh <stambaughw@gmail.com>
+ * Copyright (C) 2016 KiCad Developers, see AUTHORS.txt for contributors.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,36 +26,36 @@
 #include <fctsys.h>
 #include <common.h>
 #include <kiface_i.h>
-#include <footprint_info.h>
+#include <macros.h>
 #include <lib_id.h>
 #include <lib_table_lexer.h>
-#include <fp_lib_table.h>
-#include <class_module.h>
+#include <symbol_lib_table.h>
+#include <class_libentry.h>
 
 #define OPT_SEP     '|'         ///< options separator character
 
 using namespace LIB_TABLE_T;
 
 
-static const wxChar global_tbl_name[] = wxT( "fp-lib-table" );
+static const wxChar global_tbl_name[] = wxT( "sym-lib-table" );
 
 
-bool FP_LIB_TABLE_ROW::operator==( const FP_LIB_TABLE_ROW& aRow ) const
+bool SYMBOL_LIB_TABLE_ROW::operator==( const SYMBOL_LIB_TABLE_ROW& aRow ) const
 {
     return LIB_TABLE_ROW::operator == ( aRow ) && type == aRow.type;
 }
 
 
-void FP_LIB_TABLE_ROW::SetType( const wxString& aType )
+void SYMBOL_LIB_TABLE_ROW::SetType( const wxString& aType )
 {
-    type = IO_MGR::EnumFromStr( aType );
+    type = SCH_IO_MGR::EnumFromStr( aType );
 
-    if( IO_MGR::PCB_FILE_T( -1 ) == type )
-        type = IO_MGR::KICAD;
+    if( SCH_IO_MGR::SCH_FILE_T( -1 ) == type )
+        type = SCH_IO_MGR::SCH_KICAD;
 }
 
 
-FP_LIB_TABLE::FP_LIB_TABLE( FP_LIB_TABLE* aFallBackTable ) :
+SYMBOL_LIB_TABLE::SYMBOL_LIB_TABLE( SYMBOL_LIB_TABLE* aFallBackTable ) :
     LIB_TABLE( aFallBackTable )
 {
     // not copying fall back, simply search aFallBackTable separately
@@ -64,22 +63,22 @@ FP_LIB_TABLE::FP_LIB_TABLE( FP_LIB_TABLE* aFallBackTable ) :
 }
 
 
-void FP_LIB_TABLE::Parse( LIB_TABLE_LEXER* in ) throw()
+void SYMBOL_LIB_TABLE::Parse( LIB_TABLE_LEXER* in ) throw()
 {
     T       tok;
 
     // This table may be nested within a larger s-expression, or not.
     // Allow for parser of that optional containing s-epression to have looked ahead.
-    if( in->CurTok() != T_fp_lib_table )
+    if( in->CurTok() != T_sym_lib_table )
     {
         in->NeedLEFT();
-        if( ( tok = in->NextTok() ) != T_fp_lib_table )
-            in->Expecting( T_fp_lib_table );
+        if( ( tok = in->NextTok() ) != T_sym_lib_table )
+            in->Expecting( T_sym_lib_table );
     }
 
     while( ( tok = in->NextTok() ) != T_RIGHT )
     {
-        std::unique_ptr< FP_LIB_TABLE_ROW > row( new FP_LIB_TABLE_ROW );
+        std::unique_ptr< SYMBOL_LIB_TABLE_ROW > row( new SYMBOL_LIB_TABLE_ROW );
 
         if( tok == T_EOF )
             in->Expecting( T_RIGHT );
@@ -177,7 +176,7 @@ void FP_LIB_TABLE::Parse( LIB_TABLE_LEXER* in ) throw()
         if( !InsertRow( row.release() ) )
         {
             wxString msg = wxString::Format(
-                                _( "'%s' is a duplicate footprint library nickName" ),
+                                _( "'%s' is a duplicate symbol library nickname" ),
                                 GetChars( row->GetNickName() ) );
             THROW_PARSE_ERROR( msg, in->CurSource(), in->CurLine(), lineNum, offset );
         }
@@ -185,10 +184,10 @@ void FP_LIB_TABLE::Parse( LIB_TABLE_LEXER* in ) throw()
 }
 
 
-void FP_LIB_TABLE::Format( OUTPUTFORMATTER* out, int nestLevel ) const
+void SYMBOL_LIB_TABLE::Format( OUTPUTFORMATTER* out, int nestLevel ) const
     throw()
 {
-    out->Print( nestLevel, "(fp_lib_table\n" );
+    out->Print( nestLevel, "(sym_lib_table\n" );
 
     for( LIB_TABLE_ROWS_CITER it = rows.begin();  it != rows.end();  ++it )
         it->Format( out, nestLevel+1 );
@@ -197,23 +196,23 @@ void FP_LIB_TABLE::Format( OUTPUTFORMATTER* out, int nestLevel ) const
 }
 
 
-wxArrayString FP_LIB_TABLE::FootprintEnumerate( const wxString& aNickname )
+void SYMBOL_LIB_TABLE::EnumerateSymbolLib( const wxString& aNickname, wxArrayString& aAliasNames )
 {
-    const FP_LIB_TABLE_ROW* row = FindRow( aNickname );
-    wxASSERT( (PLUGIN*) row->plugin );
-    return row->plugin->FootprintEnumerate( row->GetFullURI( true ), row->GetProperties() );
+    const SYMBOL_LIB_TABLE_ROW* row = FindRow( aNickname );
+    wxASSERT( (SCH_PLUGIN*) row->plugin );
+    row->plugin->EnumerateSymbolLib( aAliasNames, row->GetFullURI( true ), row->GetProperties() );
 }
 
 
-const FP_LIB_TABLE_ROW* FP_LIB_TABLE::FindRow( const wxString& aNickname )
+const SYMBOL_LIB_TABLE_ROW* SYMBOL_LIB_TABLE::FindRow( const wxString& aNickname )
     throw( IO_ERROR )
 {
-    FP_LIB_TABLE_ROW* row = dynamic_cast< FP_LIB_TABLE_ROW* >( findRow( aNickname ) );
+    SYMBOL_LIB_TABLE_ROW* row = dynamic_cast< SYMBOL_LIB_TABLE_ROW* >( findRow( aNickname ) );
 
     if( !row )
     {
         wxString msg = wxString::Format(
-            _( "fp-lib-table files contain no library with nickname '%s'" ),
+            _( "sym-lib-table files contain no library with nickname '%s'" ),
             GetChars( aNickname ) );
 
         THROW_IO_ERROR( msg );
@@ -221,113 +220,123 @@ const FP_LIB_TABLE_ROW* FP_LIB_TABLE::FindRow( const wxString& aNickname )
 
     // We've been 'lazy' up until now, but it cannot be deferred any longer,
     // instantiate a PLUGIN of the proper kind if it is not already in this
-    // FP_LIB_TABLE_ROW.
+    // SYMBOL_LIB_TABLE_ROW.
     if( !row->plugin )
-        row->setPlugin( IO_MGR::PluginFind( row->type ) );
+        row->setPlugin( SCH_IO_MGR::FindPlugin( row->type ) );
 
     return row;
 }
 
 
-MODULE* FP_LIB_TABLE::FootprintLoad( const wxString& aNickname, const wxString& aFootprintName )
+LIB_ALIAS* SYMBOL_LIB_TABLE::LoadSymbol( const wxString& aNickname, const wxString& aAliasName )
 {
-    const FP_LIB_TABLE_ROW* row = FindRow( aNickname );
-    wxASSERT( (PLUGIN*) row->plugin );
+    const SYMBOL_LIB_TABLE_ROW* row = FindRow( aNickname );
+    wxASSERT( (SCH_PLUGIN*) row->plugin );
 
-    MODULE* ret = row->plugin->FootprintLoad( row->GetFullURI( true ), aFootprintName,
+    LIB_ALIAS* ret = row->plugin->LoadSymbol( row->GetFullURI( true ), aAliasName,
                                               row->GetProperties() );
 
     // The library cannot know its own name, because it might have been renamed or moved.
     // Therefore footprints cannot know their own library nickname when residing in
-    // a footprint library.
-    // Only at this API layer can we tell the footprint about its actual library nickname.
+    // a symbol library.
+    // Only at this API layer can we tell the symbol about its actual library nickname.
     if( ret )
     {
         // remove "const"-ness, I really do want to set nickname without
         // having to copy the LIB_ID and its two strings, twice each.
-        LIB_ID& fpid = (LIB_ID&) ret->GetFPID();
+        LIB_ID& id = (LIB_ID&) ret->GetPart()->GetLibId();
 
-        // Catch any misbehaving plugin, which should be setting internal footprint name properly:
-        wxASSERT( aFootprintName == (wxString) fpid.GetLibItemName() );
+        // Catch any misbehaving plugin, which should be setting internal alias name properly:
+        wxASSERT( aAliasName == (wxString) id.GetLibItemName() );
 
         // and clearing nickname
-        wxASSERT( !fpid.GetLibNickname().size() );
+        wxASSERT( !id.GetLibNickname().size() );
 
-        fpid.SetLibNickname( row->GetNickName() );
+        id.SetLibNickname( row->GetNickName() );
     }
 
     return ret;
 }
 
 
-FP_LIB_TABLE::SAVE_T FP_LIB_TABLE::FootprintSave( const wxString& aNickname,
-                                                  const MODULE* aFootprint, bool aOverwrite )
+SYMBOL_LIB_TABLE::SAVE_T SYMBOL_LIB_TABLE::SaveSymbol( const wxString& aNickname,
+                                                       const LIB_PART* aSymbol, bool aOverwrite )
 {
-    const FP_LIB_TABLE_ROW* row = FindRow( aNickname );
-    wxASSERT( (PLUGIN*) row->plugin );
+    const SYMBOL_LIB_TABLE_ROW* row = FindRow( aNickname );
+    wxASSERT( (SCH_PLUGIN*) row->plugin );
 
     if( !aOverwrite )
     {
         // Try loading the footprint to see if it already exists, caller wants overwrite
         // protection, which is atypical, not the default.
 
-        wxString fpname = aFootprint->GetFPID().GetLibItemName();
+        wxString name = aSymbol->GetLibId().GetLibItemName();
 
-        std::unique_ptr<MODULE> footprint( row->plugin->FootprintLoad( row->GetFullURI( true ),
-                                           fpname, row->GetProperties() ) );
+        std::unique_ptr< LIB_ALIAS > symbol( row->plugin->LoadSymbol( row->GetFullURI( true ),
+                                                                      name,
+                                                                      row->GetProperties() ) );
 
-        if( footprint.get() )
+        if( symbol.get() )
             return SAVE_SKIPPED;
     }
 
-    row->plugin->FootprintSave( row->GetFullURI( true ), aFootprint, row->GetProperties() );
+    row->plugin->SaveSymbol( row->GetFullURI( true ), aSymbol, row->GetProperties() );
 
     return SAVE_OK;
 }
 
 
-void FP_LIB_TABLE::FootprintDelete( const wxString& aNickname, const wxString& aFootprintName )
+void SYMBOL_LIB_TABLE::DeleteSymbol( const wxString& aNickname, const wxString& aSymbolName )
 {
-    const FP_LIB_TABLE_ROW* row = FindRow( aNickname );
-    wxASSERT( (PLUGIN*) row->plugin );
-    return row->plugin->FootprintDelete( row->GetFullURI( true ), aFootprintName,
-                                         row->GetProperties() );
+    const SYMBOL_LIB_TABLE_ROW* row = FindRow( aNickname );
+    wxASSERT( (SCH_PLUGIN*) row->plugin );
+    return row->plugin->DeleteSymbol( row->GetFullURI( true ), aSymbolName,
+                                      row->GetProperties() );
 }
 
 
-bool FP_LIB_TABLE::IsFootprintLibWritable( const wxString& aNickname )
+void SYMBOL_LIB_TABLE::DeleteAlias( const wxString& aNickname, const wxString& aAliasName )
 {
-    const FP_LIB_TABLE_ROW* row = FindRow( aNickname );
-    wxASSERT( (PLUGIN*) row->plugin );
-    return row->plugin->IsFootprintLibWritable( row->GetFullURI( true ) );
+    const SYMBOL_LIB_TABLE_ROW* row = FindRow( aNickname );
+    wxASSERT( (SCH_PLUGIN*) row->plugin );
+    return row->plugin->DeleteAlias( row->GetFullURI( true ), aAliasName,
+                                     row->GetProperties() );
 }
 
 
-void FP_LIB_TABLE::FootprintLibDelete( const wxString& aNickname )
+bool SYMBOL_LIB_TABLE::IsSymbolLibWritable( const wxString& aNickname )
 {
-    const FP_LIB_TABLE_ROW* row = FindRow( aNickname );
-    wxASSERT( (PLUGIN*) row->plugin );
-    row->plugin->FootprintLibDelete( row->GetFullURI( true ), row->GetProperties() );
+    const SYMBOL_LIB_TABLE_ROW* row = FindRow( aNickname );
+    wxASSERT( (SCH_PLUGIN*) row->plugin );
+    return row->plugin->IsSymbolLibWritable( row->GetFullURI( true ) );
 }
 
 
-void FP_LIB_TABLE::FootprintLibCreate( const wxString& aNickname )
+void SYMBOL_LIB_TABLE::DeleteSymbolLib( const wxString& aNickname )
 {
-    const FP_LIB_TABLE_ROW* row = FindRow( aNickname );
-    wxASSERT( (PLUGIN*) row->plugin );
-    row->plugin->FootprintLibCreate( row->GetFullURI( true ), row->GetProperties() );
+    const SYMBOL_LIB_TABLE_ROW* row = FindRow( aNickname );
+    wxASSERT( (SCH_PLUGIN*) row->plugin );
+    row->plugin->DeleteSymbolLib( row->GetFullURI( true ), row->GetProperties() );
 }
 
 
-MODULE* FP_LIB_TABLE::FootprintLoadWithOptionalNickname( const LIB_ID& aFootprintId )
+void SYMBOL_LIB_TABLE::CreateSymbolLib( const wxString& aNickname )
+{
+    const SYMBOL_LIB_TABLE_ROW* row = FindRow( aNickname );
+    wxASSERT( (SCH_PLUGIN*) row->plugin );
+    row->plugin->CreateSymbolLib( row->GetFullURI( true ), row->GetProperties() );
+}
+
+
+LIB_ALIAS* SYMBOL_LIB_TABLE::LoadSymbolWithOptionalNickname( const LIB_ID& aLibId )
     throw( IO_ERROR, PARSE_ERROR, boost::interprocess::lock_exception )
 {
-    wxString   nickname = aFootprintId.GetLibNickname();
-    wxString   fpname   = aFootprintId.GetLibItemName();
+    wxString   nickname = aLibId.GetLibNickname();
+    wxString   name     = aLibId.GetLibItemName();
 
     if( nickname.size() )
     {
-        return FootprintLoad( nickname, fpname );
+        return LoadSymbol( nickname, name );
     }
 
     // nickname is empty, sequentially search (alphabetically) all libs/nicks for first match:
@@ -340,7 +349,7 @@ MODULE* FP_LIB_TABLE::FootprintLoadWithOptionalNickname( const LIB_ID& aFootprin
         {
             // FootprintLoad() returns NULL on not found, does not throw exception
             // unless there's an IO_ERROR.
-            MODULE* ret = FootprintLoad( nicks[i], fpname );
+            LIB_ALIAS* ret = LoadSymbol( nicks[i], name );
 
             if( ret )
                 return ret;
@@ -351,13 +360,13 @@ MODULE* FP_LIB_TABLE::FootprintLoadWithOptionalNickname( const LIB_ID& aFootprin
 }
 
 
-const wxString FP_LIB_TABLE::GlobalPathEnvVariableName()
+const wxString SYMBOL_LIB_TABLE::GlobalPathEnvVariableName()
 {
-    return  "KISYSMOD";
+    return  "KICAD_SYSTEM_SYMBOLS";
 }
 
 
-bool FP_LIB_TABLE::LoadGlobalTable( FP_LIB_TABLE& aTable )
+bool SYMBOL_LIB_TABLE::LoadGlobalTable( SYMBOL_LIB_TABLE& aTable )
     throw (IO_ERROR, PARSE_ERROR, boost::interprocess::lock_exception )
 {
     bool        tableExists = true;
@@ -380,7 +389,7 @@ bool FP_LIB_TABLE::LoadGlobalTable( FP_LIB_TABLE& aTable )
         // The fallback is to create an empty global footprint table for the user to populate.
         if( fileName.IsEmpty() || !::wxCopyFile( fileName, fn.GetFullPath(), false ) )
         {
-            FP_LIB_TABLE    emptyTable;
+            SYMBOL_LIB_TABLE    emptyTable;
 
             emptyTable.Save( fn.GetFullPath() );
         }
@@ -392,7 +401,7 @@ bool FP_LIB_TABLE::LoadGlobalTable( FP_LIB_TABLE& aTable )
 }
 
 
-wxString FP_LIB_TABLE::GetGlobalTableFileName()
+wxString SYMBOL_LIB_TABLE::GetGlobalTableFileName()
 {
     wxFileName fn;
 

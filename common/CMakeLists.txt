@@ -229,6 +229,8 @@ set( COMMON_SRCS
     eda_pattern_match.cpp
     exceptions.cpp
     filter_reader.cpp
+    lib_id.cpp
+    lib_table_keywords.cpp
 #    findkicadhelppath.cpp.notused      deprecated, use searchhelpfilefullpath.cpp
     gbr_metadata.cpp
     gestfich.cpp
@@ -242,6 +244,7 @@ set( COMMON_SRCS
     kiway_express.cpp
     kiway_holder.cpp
     kiway_player.cpp
+    lib_table_base.cpp
     lockfile.cpp
     msgpanel.cpp
     netlist_keywords.cpp
@@ -368,8 +371,6 @@ set( PCB_COMMON_SRCS
     pcb_plot_params_keywords.cpp
     pcb_keywords.cpp
     ../pcbnew/pcb_parser.cpp
-    fp_lib_table_keywords.cpp
-    fpid.cpp
     fp_lib_table.cpp
 )
 
@@ -467,22 +468,22 @@ add_custom_target(
 
 add_dependencies( pcbcommon pcb_lexer_source_files )
 
-# auto-generate pcbnew s-expression footprint library table code.
+# auto-generate s-expression library table code.
 make_lexer(
-    ${CMAKE_CURRENT_SOURCE_DIR}/fp_lib_table.keywords
-    ${PROJECT_SOURCE_DIR}/include/fp_lib_table_lexer.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/fp_lib_table_keywords.cpp
-    FP_LIB_TABLE_T
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib_table.keywords
+    ${PROJECT_SOURCE_DIR}/include/lib_table_lexer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib_table_keywords.cpp
+    LIB_TABLE_T
     )
 
 add_custom_target(
-    fp_lib_table_lexer_source_files ALL
+    lib_table_lexer_source_files ALL
     DEPENDS
-        ${PROJECT_SOURCE_DIR}/include/fp_lib_table_lexer.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/fp_lib_table_keywords.cpp
+        ${PROJECT_SOURCE_DIR}/include/lib_table_lexer.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib_table_keywords.cpp
     )
 
-add_dependencies( pcbcommon fp_lib_table_lexer_source_files )
+add_dependencies( common lib_table_lexer_source_files )
 
 # auto-generate page layout reader s-expression page_layout_reader_lexer.h
 # and title_block_reader_keywords.cpp.
