@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE( HasHoles )
     solidPolySet.NewOutline();
     solidPolySet.NewOutline();
 
-    BOOST_TEST_CHECK( !solidPolySet.HasHoles() );
-    BOOST_TEST_CHECK(  polySet.HasHoles() );
+    BOOST_CHECK( !solidPolySet.HasHoles() );
+    BOOST_CHECK(  polySet.HasHoles() );
 }
 
 /**
