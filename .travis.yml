@@ -2,7 +2,8 @@ language: cpp
 
 before_install:
     - sudo apt-get -qq update
-    - sudo apt-get install -y cmake make boost glew glut swig glm cairo
+    - sudo apt-get install -y cmake make libboost-all-dev libglew-dev freeglut3-dev
+ swig libglm-dev libcairo2-dev
 
 install:
     - mkdir build
