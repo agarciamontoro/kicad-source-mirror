@@ -123,7 +123,18 @@ class SHAPE_POLY_SET : public SHAPE
         typedef ITERATOR_TEMPLATE<const VECTOR2I> CONST_ITERATOR;
 
         SHAPE_POLY_SET();
+
+        /**
+         * Copy constructor SHAPE_POLY_SET
+         * Performs a deep copy of \p aOther into \p this.
+         * @param aOther is the SHAPE_POLY_SET object that will be copied.
+         */
+        SHAPE_POLY_SET( const SHAPE_POLY_SET& aOther );
+
         ~SHAPE_POLY_SET();
+
+        /// @copydoc SHAPE::Clone()
+        SHAPE* Clone() const override;
 
         ///> Creates a new empty polygon in the set and returns its index
         int NewOutline();

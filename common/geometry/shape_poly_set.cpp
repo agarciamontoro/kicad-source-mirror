@@ -42,12 +42,21 @@ using namespace ClipperLib;
 SHAPE_POLY_SET::SHAPE_POLY_SET() :
     SHAPE( SH_POLY_SET )
 {
+}
 
+SHAPE_POLY_SET::SHAPE_POLY_SET( const SHAPE_POLY_SET& aOther ) :
+    SHAPE( SH_POLY_SET ), m_polys( aOther->m_polys )
+{
 }
 
 
 SHAPE_POLY_SET::~SHAPE_POLY_SET()
 {
+}
+
+SHAPE* SHAPE_POLY_SET::Clone() const override;
+{
+    return new SHAPE_POLY_SET( *this );
 }
 
 
@@ -67,7 +76,12 @@ int SHAPE_POLY_SET::NewHole( int aOutline )
     SHAPE_LINE_CHAIN empty_path;
     empty_path.SetClosed( true );
 
-    m_polys.back().push_back( empty_path );
+    // Default outline is the last one
+    if( aOutline < 0 )
+        aOutline += m_polys.size();
+
+    // Add hole to the selected outline
+    m_polys[aOutline].push_back( empty_path );
 
     return m_polys.back().size() - 2;
 }

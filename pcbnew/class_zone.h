@@ -40,6 +40,8 @@
 #include <PolyLine.h>
 #include <class_zone_settings.h>
 
+#include <shape_poly_set.h>
+
 
 class EDA_RECT;
 class LINE_READER;
@@ -209,10 +211,10 @@ public:
     std::vector <SEGMENT>& FillSegments() { return m_FillSegmList; }
     const std::vector <SEGMENT>& FillSegments() const { return m_FillSegmList; }
 
-    CPolyLine* Outline() { return m_Poly; }
-    const CPolyLine* Outline() const { return const_cast< CPolyLine* >( m_Poly ); }
+    SHAPE_POLY_SET* Outline() { return m_Poly; }
+    const SHAPE_POLY_SET* Outline() const { return const_cast< SHAPE_POLY_SET* >( m_Poly ); }
 
-    void SetOutline( CPolyLine* aOutline ) { m_Poly = aOutline; }
+    void SetOutline( SHAPE_POLY_SET* aOutline ) { m_Poly = aOutline; }
 
     /**
      * Function HitTest
@@ -231,7 +233,7 @@ public:
      */
     bool HitTestInsideZone( const wxPoint& aPosition ) const
     {
-        return m_Poly->TestPointInside( aPosition.x, aPosition.y );
+        return m_Poly->Contains( VECTOR2I( aPosition.x, aPosition.y ) );
     }
 
     /**
@@ -410,7 +412,7 @@ public:
 
     int GetNumCorners( void ) const
     {
-        return m_Poly->GetCornersCount();
+        return m_Poly->TotalVertices();
     }
 
     void RemoveAllContours( void )
@@ -485,9 +487,9 @@ public:
      * Function GetSmoothedPoly
      * returns a pointer to the corner-smoothed version of
      * m_Poly if it exists, otherwise it returns m_Poly.
-     * @return CPolyLine* - pointer to the polygon.
+     * @return SHAPE_POLY_SET* - pointer to the polygon.
      */
-    CPolyLine* GetSmoothedPoly() const
+    SHAPE_POLY_SET* GetSmoothedPoly() const
     {
         if( m_smoothedPoly )
             return m_smoothedPoly;
@@ -543,8 +545,8 @@ public:
 private:
     void buildFeatureHoleList( BOARD* aPcb, SHAPE_POLY_SET& aFeatures );
 
-    CPolyLine*            m_Poly;                ///< Outline of the zone.
-    CPolyLine*            m_smoothedPoly;        // Corner-smoothed version of m_Poly
+    SHAPE_POLY_SET*            m_Poly;                ///< Outline of the zone.
+    SHAPE_POLY_SET*            m_smoothedPoly;        // Corner-smoothed version of m_Poly
     int                   m_cornerSmoothingType;
     unsigned int          m_cornerRadius;
 
