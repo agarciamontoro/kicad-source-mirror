@@ -776,6 +776,51 @@ void SHAPE_POLY_SET::Append( const VECTOR2I& aP, int aOutline, int aHole )
     Append( aP.x, aP.y, aOutline, aHole );
 }
 
+VERTEX_INDEX CollideVertex( const VECTOR2I$ aPoint, int aClearance = 0 )
+{
+    // Index of the closest vertex to aPoint, NULL if it is more far than aClearance
+    VERTEX_INDEX closestVertex = NULL;
+
+    // Difference vector between each vertex and aPoint.
+    const VECTOR2I delta;
+
+    // Precompute squared aClearance
+    int squaredClearance = aClearance*aClearance;
+
+    // Iterate through all the vertices in the poly set
+    for( int outlineIdx = 0; outlineIdx < m_polys.size(); outlineIdx++ )
+    {
+        for( int holeIdx = 0; holeIdx < m_polys[outlineIdx].size(); holeIdx++ )
+        {
+            for( int vertexIdx = 0; vertexIdx < m_polys[outlineIdx].size(); vertexIdx++ )
+            {
+                // Get the difference vector between current vertex and aPoint
+                delta = m_polys[outlineIdx][holeIdx][vertexIdx] - aPoint;
+
+                // Compute distance
+                ecoord squaredDistance = delta.SquaredEuclideanNorm();
+
+                if(squaredDistance <= squaredClearance)
+                {
+                    // Update aClearance to look for closer vertices
+                    squaredClearance = squaredDistance;
+
+                    // Store the indices that identify the vertex
+                    closestVertex.aOutline = outlineIdx;
+                    closestVertex.aHole = holeIdx;
+                    closestVertex.aVertex = vertexIdx;
+                }
+            }
+        }
+    }
+
+    return closestVertex;
+}
+
+VERTEX_INDEX CollideEdge( const VECTOR2I$ aPoint, int aClearance = 0 )
+{
+    ITERATOR iterator = Iterate();
+}
 
 bool SHAPE_POLY_SET::Contains( const VECTOR2I& aP, int aSubpolyIndex ) const
 {

@@ -53,7 +53,7 @@
 ZONE_CONTAINER::ZONE_CONTAINER( BOARD* aBoard ) :
     BOARD_CONNECTED_ITEM( aBoard, PCB_ZONE_AREA_T )
 {
-    m_CornerSelection = -1;
+    m_CornerSelection = nullptr;
     m_IsFilled = false;                         // fill status : true when the zone is filled
     m_FillMode = 0;                             // How to fill areas: 0 = use filled polygons, != 0 fill with segments
     m_priority = 0;
@@ -80,7 +80,7 @@ ZONE_CONTAINER::ZONE_CONTAINER( const ZONE_CONTAINER& aZone ) :
     m_Poly = new SHAPE_POLY_SET( *aZone.m_Poly );
 
     // For corner moving, corner index to drag, or -1 if no selection
-    m_CornerSelection = -1;
+    m_CornerSelection = nullptr;
     m_IsFilled = aZone.m_IsFilled;
     m_ZoneClearance = aZone.m_ZoneClearance;     // clearance value
     m_ZoneMinThickness = aZone.m_ZoneMinThickness;
@@ -113,7 +113,7 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
     delete m_Poly;
     m_Poly = (SHAPE_POLY_SET*) aOther.Clone();
 
-    m_CornerSelection  = -1;        // for corner moving, corner index to drag or -1 if no selection
+    m_CornerSelection  = NULL;        // for corner moving, corner index to drag or -1 if no selection
     m_ZoneClearance    = aOther.m_ZoneClearance;            // clearance value
     m_ZoneMinThickness = aOther.m_ZoneMinThickness;
     m_FillMode = aOther.m_FillMode;                         // filling mode (segments/polygons)
@@ -521,9 +521,9 @@ int ZONE_CONTAINER::HitTestForEdge( const wxPoint& refPos ) const
 
 bool ZONE_CONTAINER::HitTest( const EDA_RECT& aRect, bool aContained, int aAccuracy ) const
 {
-    EDA_RECT arect = aRect;
+    BOX2I arect = aRect;
     arect.Inflate( aAccuracy );
-    EDA_RECT bbox = m_Poly->GetBoundingBox();
+    BOX2I bbox = m_Poly->BBox();
     bbox.Normalize();
 
     if( aContained )
@@ -540,7 +540,7 @@ bool ZONE_CONTAINER::HitTest( const EDA_RECT& aRect, bool aContained, int aAccur
         // and can intersect the polygon: use a fine test.
         // aRect intersects the polygon if at least one aRect corner
         // is inside the polygon
-        wxPoint corner = arect.GetOrigin();
+        wxPoint corner = (wxPoint)arect.GetOrigin();
 
         if( HitTestInsideZone( corner ) )
             return true;
@@ -562,10 +562,10 @@ bool ZONE_CONTAINER::HitTest( const EDA_RECT& aRect, bool aContained, int aAccur
 
         // No corner inside arect, but outlines can intersect arect
         // if one of outline corners is inside arect
-        int count = m_Poly->GetCornersCount();
+        int count = m_Poly->TotalVertices();
         for( int ii =0; ii < count; ii++ )
         {
-            if( arect.Contains( m_Poly->GetPos( ii ) ) )
+            if( arect.Contains( m_Poly->Vertex( ii ) ) )
                 return true;
         }
 

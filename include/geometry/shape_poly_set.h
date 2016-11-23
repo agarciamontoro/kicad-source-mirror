@@ -49,6 +49,18 @@ class SHAPE_POLY_SET : public SHAPE
         typedef std::vector<SHAPE_LINE_CHAIN> POLYGON;
 
         /**
+         * Struct VERTEX_INDEX
+         * Holds the necessary information to index a vertex on a SHAPE_POLY_SET object:
+         * the outline index, the hole index relative to the outline and the vertex index relative
+         * the hole.
+         */
+        typedef struct{
+            int aOutline;   /*!< aOutline is the index of the outline. */
+            int aHole;      /*!< aHole is the index of the hole. */
+            int aVertex;    /*!< aVertex is the index of the vertex. */
+        } VERTEX_INDEX;
+
+        /**
          * Class ITERATOR_TEMPLATE
          *
          * Base class for iterating over all vertices in a given SHAPE_POLY_SET
@@ -360,6 +372,28 @@ class SHAPE_POLY_SET : public SHAPE
         // fixme: add collision support
         bool Collide( const SEG& aSeg, int aClearance = 0 ) const override { return false; }
 
+        /**
+         * Function CollideVertex
+         * Checks whether aPoint collides with any vertex of any of the polygons of the poly set.
+         * @param  aPoint     is the VECTOR2I point whose collision with respect to the poly set
+         *                    will be tested
+         * @param  aClearance is the security distance; if \p aPoint lies closer to a vertex than
+         *                    aClearance distance, then there is a collision.
+         * @return VERTEX_INDEX - the index of the closest polygon vertex to \p aPoint.
+         */
+        VERTEX_INDEX CollideVertex( const VECTOR2I$ aPoint, int aClearance = 0 ) const;
+
+        /**
+         * Function CollideEdge
+         * Checks whether aPoint collides with any edge of any of the polygons of the poly set.
+         * @param  aPoint     is the VECTOR2I point whose collision with respect to the poly set
+         *                    will be tested.
+         * @param  aClearance is the security distance; if \p aPoint lies closer to a vertex than
+         *                    aClearance distance, then there is a collision.
+         * @return VERTEX_INDEX - the index of the closest polygon vertex to \p aPoint.
+         */
+
+        VERTEX_INDEX CollideEdge( const VECTOR2I$ aPoint, int aClearance = 0 ) const;
 
         ///> Returns true is a given subpolygon contains the point aP. If aSubpolyIndex < 0 (default value),
         ///> checks all polygons in the set
