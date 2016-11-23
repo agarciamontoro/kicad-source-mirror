@@ -589,8 +589,8 @@ private:
     /// How to fill areas: 0 => use filled polygons, 1 => fill with segments.
     int                   m_FillMode;
 
-    /// The index of the corner being moved or -1 if no corner is selected.
-    int                   m_CornerSelection;
+    /// The index of the corner being moved or null if no corner is selected.
+    SHAPE_POLY_SET::VERTEX_INDEX*                   m_CornerSelection;
 
     /// Variable used in polygon calculations.
     int                   m_localFlgs;
