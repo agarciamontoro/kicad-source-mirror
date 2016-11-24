@@ -305,6 +305,7 @@ set( COMMON_SRCS
     geometry/seg.cpp
     geometry/shape.cpp
     geometry/shape_line_chain.cpp
+    geometry/shape_polygon.cpp
     geometry/shape_poly_set.cpp
     geometry/shape_collisions.cpp
     geometry/shape_file_io.cpp
