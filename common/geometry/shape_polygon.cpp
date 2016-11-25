@@ -299,7 +299,7 @@ void SHAPE_POLYGON::Inflate( int aFactor, int aCircleSegmentsCount )
 
     c.Execute( solution, aFactor );
 
-    importTree( &solution );
+    importNode( solution.GetFirst() );
 }
 
 
@@ -711,6 +711,18 @@ SHAPE_POLYGON SHAPE_POLYGON::Fillet( unsigned int aRadius, unsigned int aSegment
  * PRIVATE FUNCTIONS *
  *********************/
 
+ void SHAPE_POLYGON::importNode( PolyNode* node )
+ {
+     POLYGON paths;
+     paths.reserve( node->Childs.size() + 1 );
+     paths.push_back( convertFromClipper( node->Contour ) );
+
+     for( unsigned int i = 0; i < node->Childs.size(); i++ )
+         paths.push_back( convertFromClipper( node->Childs[i]->Contour ) );
+
+     m_contours = paths;
+ }
+
 
 void SHAPE_POLYGON::booleanOp( ClipType aType, const SHAPE_POLYGON& aOtherShape,
                                POLYGON_MODE aFastMode )
@@ -730,7 +742,7 @@ void SHAPE_POLYGON::booleanOp( ClipType aType, const SHAPE_POLYGON& aOtherShape,
 
     c.Execute( aType, solution, pftNonZero, pftNonZero );
 
-    importTree( &solution );
+    importNode( solution.GetFirst() );
 }
 
 
@@ -752,7 +764,7 @@ void SHAPE_POLYGON::booleanOp( ClipperLib::ClipType aType, const SHAPE_POLYGON& 
 
     c.Execute( aType, solution, pftNonZero, pftNonZero );
 
-    importTree( &solution );
+    importNode( solution.GetFirst() );
 }
 
 

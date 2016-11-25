@@ -426,6 +426,13 @@ class SHAPE_POLYGON : public SHAPE
         SHAPE_POLYGON Fillet( unsigned int aRadius, unsigned int aSegments );
 
     private:
+        /**
+         * Function importNode
+         * Imports a Clipper node into this polygon
+         * @param node is a PolyNode object from Clipper defining a polygon with holes.
+         */
+         void importNode( ClipperLib::PolyNode* node );
+
         /** Function booleanOp
          * this is the engine to execute all polygon boolean transforms
          * (AND, OR, ... and polygon simplification (merging overlaping  polygons)
