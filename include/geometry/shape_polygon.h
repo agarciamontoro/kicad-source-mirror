@@ -50,6 +50,17 @@ class SHAPE_POLYGON : public SHAPE
         typedef std::vector<SHAPE_LINE_CHAIN> POLYGON;
 
         /**
+         * Struct VERTEX_INDEX
+         * Holds the necessary information to index a vertex on a SHAPE_POLYGON object:
+         * the contour index and the vertex index relative to the contour.
+         */
+        typedef struct
+        {
+            int m_contourIdx; /*!< m_contourIdx is the index of the contour. */
+            int m_vertexIdx; /*!< m_vertexIdx is the index of the vertex. */
+        } VERTEX_INDEX;
+
+        /**
          * Class ITERATOR_TEMPLATE
          *
          * Base class for iterating over all vertices in a given SHAPE_POLYGON
