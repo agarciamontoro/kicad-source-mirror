@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2015 CERN
  * @author Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ * @author Alejandro García Montoro <alejandro.garciamontoro@gmail.com>
  *
  * Point in polygon algorithm adapted from Clipper Library (C) Angus Johnson,
  * subject to Clipper library license.
