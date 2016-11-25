@@ -407,6 +407,29 @@ class SHAPE_POLYGON : public SHAPE
         bool Collide( const SEG& aSeg, int aClearance = 0 ) const override;
 
         /**
+         * Function CollideVertex
+         * Checks whether aPoint collides with any vertex of any of the contours of the polygon.
+         * @param  aPoint     is the VECTOR2I point whose collision with respect to the polygon
+         *                    will be tested
+         * @param  aClearance is the security distance; if \p aPoint lies closer to a vertex than
+         *                    aClearance distance, then there is a collision.
+         * @return VERTEX_INDEX - the index of the closest contour vertex to \p aPoint.
+         */
+        VERTEX_INDEX CollideVertex( const VECTOR2I$ aPoint, int aClearance = 0 ) const;
+
+        /**
+         * Function CollideEdge
+         * Checks whether aPoint collides with any edge of any of the contours of the polygon.
+         * @param  aPoint     is the VECTOR2I point whose collision with respect to the polygon
+         *                    will be tested.
+         * @param  aClearance is the security distance; if \p aPoint lies closer to a vertex than
+         *                    aClearance distance, then there is a collision.
+         * @return VERTEX_INDEX - the index of the closest contour vertex to \p aPoint.
+         */
+
+        VERTEX_INDEX CollideEdge( const VECTOR2I$ aPoint, int aClearance = 0 ) const;
+
+        /**
          * Function Contains
          * @param  aP            is the point that wants to be checked.
          * @return               true if \p aP is inside the polygon and false in any other case.

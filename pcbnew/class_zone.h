@@ -39,6 +39,7 @@
 #include <layers_id_colors_and_visibility.h>
 #include <PolyLine.h>
 #include <class_zone_settings.h>
+#include <geometry/shape_polygon.h>
 
 
 class EDA_RECT;
@@ -209,10 +210,10 @@ public:
     std::vector <SEGMENT>& FillSegments() { return m_FillSegmList; }
     const std::vector <SEGMENT>& FillSegments() const { return m_FillSegmList; }
 
-    CPolyLine* Outline() { return m_Poly; }
-    const CPolyLine* Outline() const { return const_cast< CPolyLine* >( m_Poly ); }
+    SHAPE_POLYGON* Outline() { return m_Poly; }
+    const SHAPE_POLYGON* Outline() const { return const_cast< SHAPE_POLYGON* >( m_Poly ); }
 
-    void SetOutline( CPolyLine* aOutline ) { m_Poly = aOutline; }
+    void SetOutline( SHAPE_POLYGON* aOutline ) { m_Poly = aOutline; }
 
     /**
      * Function HitTest
@@ -485,9 +486,9 @@ public:
      * Function GetSmoothedPoly
      * returns a pointer to the corner-smoothed version of
      * m_Poly if it exists, otherwise it returns m_Poly.
-     * @return CPolyLine* - pointer to the polygon.
+     * @return SHAPE_POLYGON* - pointer to the polygon.
      */
-    CPolyLine* GetSmoothedPoly() const
+    SHAPE_POLYGON* GetSmoothedPoly() const
     {
         if( m_smoothedPoly )
             return m_smoothedPoly;
@@ -543,8 +544,8 @@ public:
 private:
     void buildFeatureHoleList( BOARD* aPcb, SHAPE_POLY_SET& aFeatures );
 
-    CPolyLine*            m_Poly;                ///< Outline of the zone.
-    CPolyLine*            m_smoothedPoly;        // Corner-smoothed version of m_Poly
+    SHAPE_POLYGON*            m_Poly;                ///< Outline of the zone.
+    SHAPE_POLYGON*            m_smoothedPoly;        // Corner-smoothed version of m_Poly
     int                   m_cornerSmoothingType;
     unsigned int          m_cornerRadius;
 

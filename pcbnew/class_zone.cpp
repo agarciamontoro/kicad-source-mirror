@@ -57,7 +57,7 @@ ZONE_CONTAINER::ZONE_CONTAINER( BOARD* aBoard ) :
     m_IsFilled = false;                         // fill status : true when the zone is filled
     m_FillMode = 0;                             // How to fill areas: 0 = use filled polygons, != 0 fill with segments
     m_priority = 0;
-    m_smoothedPoly = NULL;
+    m_smoothedPoly = nullptr;
     m_cornerSmoothingType = ZONE_SETTINGS::SMOOTHING_NONE;
     SetIsKeepout( false );
     SetDoNotAllowCopperPour( false );           // has meaning only if m_isKeepout == true
@@ -65,7 +65,7 @@ ZONE_CONTAINER::ZONE_CONTAINER( BOARD* aBoard ) :
     SetDoNotAllowTracks( true );                // has meaning only if m_isKeepout == true
     m_cornerRadius = 0;
     SetLocalFlags( 0 );                         // flags tempoarry used in zone calculations
-    m_Poly     = new CPolyLine();               // Outlines
+    m_Poly     = new SHAPE_POLYGON();               // Outlines
     aBoard->GetZoneSettings().ExportSetting( *this );
 }
 
@@ -73,11 +73,11 @@ ZONE_CONTAINER::ZONE_CONTAINER( BOARD* aBoard ) :
 ZONE_CONTAINER::ZONE_CONTAINER( const ZONE_CONTAINER& aZone ) :
     BOARD_CONNECTED_ITEM( aZone )
 {
-    m_smoothedPoly = NULL;
+    m_smoothedPoly = nullptr;
 
     // Should the copy be on the same net?
     SetNetCode( aZone.GetNetCode() );
-    m_Poly = new CPolyLine( *aZone.m_Poly );
+    m_Poly = new SHAPE_POLYGON( *aZone.m_Poly );
 
     // For corner moving, corner index to drag, or -1 if no selection
     m_CornerSelection = -1;
@@ -109,8 +109,12 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
 {
     BOARD_CONNECTED_ITEM::operator=( aOther );
 
-    m_Poly->RemoveAllContours();
-    m_Poly->Copy( aOther.m_Poly );  // copy outlines
+    // m_Poly->RemoveAllContours();
+    // m_Poly->Copy( aOther.m_Poly );  // copy outlines
+
+    delete m_Poly;
+    m_Poly = new SHAPE_POLYGON( aOther.m_Poly );
+
     m_CornerSelection  = -1;        // for corner moving, corner index to drag or -1 if no selection
     m_ZoneClearance    = aOther.m_ZoneClearance;            // clearance value
     m_ZoneMinThickness = aOther.m_ZoneMinThickness;
@@ -134,7 +138,7 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
 ZONE_CONTAINER::~ZONE_CONTAINER()
 {
     delete m_Poly;
-    m_Poly = NULL;
+    m_Poly = nullptr;
 }
 
 
@@ -201,20 +205,33 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
     std::vector<wxPoint> lines;
     lines.reserve( (GetNumCorners() * 2) + 2 );
 
-    for( int ic = 0; ic < GetNumCorners(); ic++ )
+    // Object to iterate through the corners of the contours
+    ITERATOR iterator = m_Poly->IterateOutlineAndHoles();
+
+    // Remember the first point of this contour
+    wxPoint contour_first_point = (wxPoint) *iterator;
+
+    // Iterate through all the corners of the outlines and build the segments to draw
+    while(iterator)
     {
-        seg_start = GetCornerPosition( ic ) + offset;
+        // Get the first point of the current segment
+        seg_start = *iterator + offset;
 
-        if( !m_Poly->m_CornersList.IsEndContour( ic ) && ic < GetNumCorners() - 1 )
+        // Get the last point of the current segment, handling the case where the end of the
+        // contour is reached, when the last point of the segment is the first point of the
+        // contour
+        if( !iterator.IsEndContour() )
         {
-            seg_end = GetCornerPosition( ic + 1 ) + offset;
+            seg_end = *(iterator++) + offset;
         }
-        else
-        {
-            seg_end = GetCornerPosition( i_start_contour ) + offset;
-            i_start_contour = ic + 1;
+        else{
+            seg_end = contour_first_point + offset;
+
+            // Reassign first point of the contour to the next contour start
+            contour_first_point = *(iterator++)
         }
 
+        // Create the segment
         lines.push_back( seg_start );
         lines.push_back( seg_end );
     }
@@ -395,45 +412,46 @@ void ZONE_CONTAINER::DrawWhileCreateOutline( EDA_DRAW_PANEL* panel, wxDC* DC,
             ColorTurnToDarkDarkGray( &color );
     }
 
-    // draw the lines
-    wxPoint start_contour_pos = GetCornerPosition( 0 );
-    int     icmax = GetNumCorners() - 1;
+    // Object to iterate through the corners of the outlines
+    ITERATOR iterator = m_Poly->IterateOutlineAndHoles();
 
-    for( int ic = 0; ic <= icmax; ic++ )
+    // Remember the first point of this contour
+    wxPoint contour_first_point = (wxPoint) *iterator;
+
+    // Iterate through all the corners of the outlines and build the segments to draw
+    while(iterator)
     {
-        int xi = GetCornerPosition( ic ).x;
-        int yi = GetCornerPosition( ic ).y;
-        int xf, yf;
+        // Get the first point of the current segment
+        seg_start = *iterator;
 
-        if( !m_Poly->m_CornersList.IsEndContour( ic ) && ic < icmax )
+        // Get the last point of the current segment, handling the case where the end of the
+        // contour is reached, when the last point of the segment is the first point of the
+        // contour
+        if( !iterator.IsEndContour() )
         {
-            is_close_segment = false;
-            xf = GetCornerPosition( ic + 1 ).x;
-            yf = GetCornerPosition( ic + 1 ).y;
+            seg_end = *(iterator++);
 
-            if( m_Poly->m_CornersList.IsEndContour( ic + 1 ) || (ic == icmax - 1) )
-                current_gr_mode = GR_XOR;
-            else
-                current_gr_mode = draw_mode;
+            // Set GR mode to default
+            current_gr_mode = draw_mode;
         }
-        else    // Draw the line from last corner to the first corner of the current contour
-        {
-            is_close_segment = true;
-            current_gr_mode  = GR_XOR;
-            xf = start_contour_pos.x;
-            yf = start_contour_pos.y;
+        else{
+            seg_end = contour_first_point;
 
-            // Prepare the next contour for drawing, if exists
-            if( ic < icmax )
-                start_contour_pos = GetCornerPosition( ic + 1 );
+            // Reassign first point of the contour to the next contour start
+            contour_first_point = *(iterator++)
+
+            // Set GR mode to XOR
+            current_gr_mode = GR_XOR;
         }
 
         GRSetDrawMode( DC, current_gr_mode );
 
         if( is_close_segment )
-            GRLine( panel->GetClipBox(), DC, xi, yi, xf, yf, 0, WHITE );
+            GRLine( panel->GetClipBox(), DC, seg_start.x, seg_start.y, seg_end.x, seg_end.y, 0,
+                    WHITE );
         else
-            GRLine( panel->GetClipBox(), DC, xi, yi, xf, yf, 0, color );
+            GRLine( panel->GetClipBox(), DC, seg_start.x, seg_start.y, seg_end.x, seg_end.y, 0,
+                    color );
     }
 }
 
