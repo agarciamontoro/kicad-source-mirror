@@ -232,7 +232,7 @@ public:
      */
     bool HitTestInsideZone( const wxPoint& aPosition ) const
     {
-        return m_Poly->TestPointInside( aPosition.x, aPosition.y );
+        return m_Poly->Contains( VECTOR2I( aPosition.x, aPosition.y ) );
     }
 
     /**
@@ -411,7 +411,7 @@ public:
 
     int GetNumCorners( void ) const
     {
-        return m_Poly->GetCornersCount();
+        return m_Poly->TotalVertices();
     }
 
     void RemoveAllContours( void )
@@ -421,7 +421,11 @@ public:
 
     const wxPoint& GetCornerPosition( int aCornerIndex ) const
     {
-        return m_Poly->GetPos( aCornerIndex );
+        // Get the contour/vertex indices from the global index
+        SHAPE_POLYGON::VERTEX_INDEX index = m_Poly->GetVertexIndex( aCornerIndex );
+
+        // Return the wxPoint from the provided index.
+        return (wxPoint) m_Poly->CVertex( index.m_vertexIdx, index.m_contourIdx );
     }
 
     void SetCornerPosition( int aCornerIndex, wxPoint new_pos )

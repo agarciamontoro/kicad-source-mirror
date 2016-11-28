@@ -109,9 +109,7 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
 {
     BOARD_CONNECTED_ITEM::operator=( aOther );
 
-    // m_Poly->RemoveAllContours();
-    // m_Poly->Copy( aOther.m_Poly );  // copy outlines
-
+    // Replace self polygon
     delete m_Poly;
     m_Poly = new SHAPE_POLYGON( aOther.m_Poly );
 
