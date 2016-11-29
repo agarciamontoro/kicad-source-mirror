@@ -211,7 +211,6 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
     // Iterate through all the corners of the outlines and build the segments to draw
     while(iterator)
     {
-
         // Get the first point of the current segment
         seg_start = *iterator + offset;
 

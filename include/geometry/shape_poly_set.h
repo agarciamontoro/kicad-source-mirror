@@ -63,36 +63,82 @@ class SHAPE_POLY_SET : public SHAPE
         /**
          * Class ITERATOR_TEMPLATE
          *
-         * Base class for iterating over all vertices in a given SHAPE_POLY_SET
+         * Base class for iterating over all vertices in a given SHAPE_POLY_SET.
+         *
+         * Let us define the terms used on this class to clarify comments and methods names:
+         *      - Polygon: each polygon in the set.
+         *      - Outline: first polyline in each polygon; represents its outer contour.
+         *      - Hole: second and following polylines in the polygon.
+         *      - Contour: each polyline of each polygon in the set, whether or not it is an
+         *      outline or a hole.
+         *      - Vertex (or corner): each one of the points that define a contour.
          */
         template <class T>
         class ITERATOR_TEMPLATE
         {
         public:
 
+            /**
+             * Function IsEndContour.
+             * @return True if the current vertex is the last one of the current contour (outline or hole).
+             */
             bool IsEndContour() const
             {
-                return m_currentVertex + 1 == m_poly->CPolygon( m_currentOutline )[0].PointCount();
+                return m_currentVertex + 1 == m_poly->CPolygon( m_currentPolygon )[m_currentContour].PointCount();
             }
 
-            bool IsLastContour() const
+            /**
+             * Function IsLastOutline.
+             * @return True if the current outline is the last one.
+             */
+            bool IsLastPolygon() const
             {
-                return m_currentOutline == m_lastOutline;
+                return m_currentPolygon == m_lastPolygon;
             }
 
             operator bool() const
             {
-                return m_currentOutline <= m_lastOutline;
+                return m_currentPolygon <= m_lastPolygon;
             }
 
+            /**
+             * Function Advance.
+             *
+             * Advance the indices of the current vertex/outline/contour, checking whether the
+             * vertices in the holes have to be iterated through
+             */
             void Advance()
             {
+                // Advance vertex index
                 m_currentVertex ++;
 
-                if( m_currentVertex >= m_poly->CPolygon( m_currentOutline )[0].PointCount() )
+                // Check whether the user wants to iterate through the vertices of the holes
+                // and behave accordingly
+                if( m_iterateHoles )
                 {
-                    m_currentVertex = 0;
-                    m_currentOutline++;
+                    // If the last vertex of the contour was reached, advance the contour index
+                    if( m_currentVertex >= m_poly->CPolygon( m_currentPolygon )[m_currentContour].PointCount() )
+                    {
+                        m_currentVertex = 0;
+                        m_currentContour++;
+
+                        // If the last contour of the current polygon was reached, advance the
+                        // outline index
+                        if( m_currentContour >= m_poly->CPolygon( m_currentPolygon ).size() )
+                        {
+                            m_currentContour = 0;
+                            m_currentPolygon++;
+                        }
+                    }
+                }
+                else
+                {
+                    // If the last vertex of the outline was reached, advance to the following polygon
+                    if( m_currentVertex >= m_poly->CPolygon( m_currentPolygon )[0].PointCount() )
+                    {
+                        m_currentVertex = 0;
+                        m_currentPolygon++;
+                    }
                 }
             }
 
@@ -108,7 +154,7 @@ class SHAPE_POLY_SET : public SHAPE
 
             T& Get()
             {
-                return m_poly->Polygon( m_currentOutline )[0].Point( m_currentVertex );
+                return m_poly->Polygon( m_currentPolygon )[m_currentContour].Point( m_currentVertex );
             }
 
             T& operator*()
@@ -126,9 +172,11 @@ class SHAPE_POLY_SET : public SHAPE
             friend class SHAPE_POLY_SET;
 
             SHAPE_POLY_SET* m_poly;
-            int m_currentOutline;
-            int m_lastOutline;
+            int m_currentPolygon;
+            int m_currentHole;
             int m_currentVertex;
+            int m_lastPolygon;
+            bool m_iterateHoles;
         };
 
         typedef ITERATOR_TEMPLATE<VECTOR2I> ITERATOR;
@@ -144,6 +192,23 @@ class SHAPE_POLY_SET : public SHAPE
         SHAPE_POLY_SET( const SHAPE_POLY_SET& aOther );
 
         ~SHAPE_POLY_SET();
+
+        /**
+         * Function FindIndices
+         *
+         * Converts a global vertex index ---i.e., a number that globally identifies a vertex in a
+         * concatenated list of all vertices in all contours--- and get the nidex of the vertex
+         * relative to the contour relative to the polygon ni which it is.
+         * @param  aGlobalIdx  is the global index of the corner whose structured index wants to
+         *                     be found
+         * @param  aPolygonIdx is the index of the polygon in which the expected vertex is.
+         * @param  aContourIdx is the index of the contour in the aPolygonIdx-th poylgon in which
+         *                     the expected vertex is.
+         * @param  aVertexIdx  is the index of the vertex in the aContourIdx-th contour in which
+         *                     the expected vertex is.
+         * @return             [description]
+         */
+        bool FindIndices( int aGlobalIdx, int& aPolygonIdx, int& aContourIdx, int& aVertexIdx);
 
         /// @copydoc SHAPE::Clone()
         SHAPE* Clone() const override;
@@ -231,8 +296,8 @@ class SHAPE_POLY_SET : public SHAPE
             ITERATOR iter;
 
             iter.m_poly = this;
-            iter.m_currentOutline = aFirst;
-            iter.m_lastOutline = aLast < 0 ? OutlineCount() - 1 : aLast;
+            iter.m_currentPolygon = aFirst;
+            iter.m_lastPolygon = aLast < 0 ? OutlineCount() - 1 : aLast;
             iter.m_currentVertex = 0;
 
             return iter;
@@ -255,8 +320,8 @@ class SHAPE_POLY_SET : public SHAPE
             CONST_ITERATOR iter;
 
             iter.m_poly = const_cast<SHAPE_POLY_SET*>( this );
-            iter.m_currentOutline = aFirst;
-            iter.m_lastOutline = aLast < 0 ? OutlineCount() - 1 : aLast;
+            iter.m_currentPolygon = aFirst;
+            iter.m_lastPolygon = aLast < 0 ? OutlineCount() - 1 : aLast;
             iter.m_currentVertex = 0;
 
             return iter;
@@ -374,28 +439,31 @@ class SHAPE_POLY_SET : public SHAPE
 
         /**
          * Function CollideVertex
-         * Checks whether aPoint collides with any vertex of any of the polygons of the poly set.
-         * @param  aPoint     is the VECTOR2I point whose collision with respect to the poly set
+         * Checks whether aPoint collides with any vertex of any of the contours of the polygon.
+         * @param  aPoint     is the VECTOR2I point whose collision with respect to the polygon
          *                    will be tested
          * @param  aClearance is the security distance; if \p aPoint lies closer to a vertex than
          *                    aClearance distance, then there is a collision.
-         * @return VERTEX_INDEX - the index of the closest polygon vertex to \p aPoint.
+         * @param aClosestVertex is the index of the closes vertex to \p aPoint.
+         * @return bool - true if there is a collision, false in any other case.
          */
-        VERTEX_INDEX CollideVertex( const VECTOR2I$ aPoint, int aClearance = 0 ) const;
+        bool CollideVertex( const VECTOR2I& aPoint, VERTEX_INDEX& aClosestVertex,
+                int aClearance = 0 );
 
         /**
          * Function CollideEdge
-         * Checks whether aPoint collides with any edge of any of the polygons of the poly set.
-         * @param  aPoint     is the VECTOR2I point whose collision with respect to the poly set
+         * Checks whether aPoint collides with any edge of any of the contours of the polygon.
+         * @param  aPoint     is the VECTOR2I point whose collision with respect to the polygon
          *                    will be tested.
          * @param  aClearance is the security distance; if \p aPoint lies closer to a vertex than
          *                    aClearance distance, then there is a collision.
-         * @return VERTEX_INDEX - the index of the closest polygon vertex to \p aPoint.
+         * @param aClosestVertex is the index of the closes vertex to \p aPoint.
+         * @return bool - true if there is a collision, false in any other case.
          */
+        bool CollideEdge( const VECTOR2I& aPoint, VERTEX_INDEX& aClosestVertex,
+                int aClearance = 0 );
 
-        VERTEX_INDEX CollideEdge( const VECTOR2I$ aPoint, int aClearance = 0 ) const;
-
-        ///> Returns true is a given subpolygon contains the point aP. If aSubpolyIndex < 0 (default value),
+        ///> Returns true if a given subpolygon contains the point aP. If aSubpolyIndex < 0 (default value),
         ///> checks all polygons in the set
         bool Contains( const VECTOR2I& aP, int aSubpolyIndex = -1 ) const;
 

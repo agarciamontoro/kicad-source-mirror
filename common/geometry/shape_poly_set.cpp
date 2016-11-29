@@ -59,6 +59,48 @@ SHAPE* SHAPE_POLY_SET::Clone() const override;
     return new SHAPE_POLY_SET( *this );
 }
 
+bool SHAPE_POLY_SET::FindIndices( int aGlobalIdx, int& aPolygonIdx, int& aContourIdx,
+                                  int& aVertexIdx)
+{
+    SHAPE_POLYGON::VERTEX_INDEX finalIdx;
+    int contourIdx = 0;
+    int vertexIdx = 0;
+
+    int currentGlobalIdx = 0;
+
+    bool found = false;
+
+    for( polygonIdx = 0; polygonIdx < OutlineCount(); polygonIdx++ )
+    {
+        POLYGON currentPolygon = Polygon( polygonIdx );
+
+        for( contourIdx = 0; contourIdx < currentPolygon.size() && !found; contourIdx++ )
+        {
+            SHAPE_LINE_CHAIN currentContour = currentPolygon[contourIdx];
+            int totalPoints = currentContour.PointCount();
+
+            for( vertexIdx = 0; vertexIdx < totalPoints && !found; vertexIdx++ )
+            {
+                // Check if the current vertex is tehe globally indexed as aGlobalIdx
+                if( currentGlobalIdx == aGlobalIdx )
+                {
+                    found = true;
+
+                    aPolygonIdx = polygonIdx;
+                    aContourIdx = contourIdx;
+                    aVertexIdx  = vertexIdx;
+                }
+
+                // Advance
+                currentGlobalIdx++;
+            }
+        }
+    }
+
+    return found;
+}
+
+
 
 int SHAPE_POLY_SET::NewOutline()
 {
@@ -776,50 +818,79 @@ void SHAPE_POLY_SET::Append( const VECTOR2I& aP, int aOutline, int aHole )
     Append( aP.x, aP.y, aOutline, aHole );
 }
 
-VERTEX_INDEX CollideVertex( const VECTOR2I$ aPoint, int aClearance = 0 )
+bool SHAPE_POLYGON::CollideVertex( const VECTOR2I& aPoint, VERTEX_INDEX& aClosestVertex,
+                                   int aClearance )
 {
-    // Index of the closest vertex to aPoint, NULL if it is more far than aClearance
-    VERTEX_INDEX closestVertex = NULL;
+    // Shows whether there was a collision
+    bool collision = false;
 
     // Difference vector between each vertex and aPoint.
-    const VECTOR2I delta;
+    VECTOR2I delta;
 
     // Precompute squared aClearance
     int squaredClearance = aClearance*aClearance;
 
-    // Iterate through all the vertices in the poly set
-    for( int outlineIdx = 0; outlineIdx < m_polys.size(); outlineIdx++ )
+    for( ITERATOR iterator = IterateOutlineWithHoles(); iterator; iterator++)
     {
-        for( int holeIdx = 0; holeIdx < m_polys[outlineIdx].size(); holeIdx++ )
+        // Get the difference vector between current vertex and aPoint
+        delta = *iterator - aPoint;
+
+        // Compute distance
+        ecoord squaredDistance = delta.SquaredEuclideanNorm();
+
+        // Check for collisions
+        if(squaredDistance <= squaredClearance)
         {
-            for( int vertexIdx = 0; vertexIdx < m_polys[outlineIdx].size(); vertexIdx++ )
+            collision = true;
+
+            // Update aClearance to look for closer vertices
+            squaredClearance = squaredDistance;
+
+            // Store the indices that identify the vertex
+            aClosestVertex.m_contourIdx = iterator.m_currentContour;
+            aClosestVertex.m_vertexIdx = iterator.m_currentVertex;
+        }
+    }
+
+    return collision;
+}
+
+
+bool SHAPE_POLYGON::CollideEdge( const VECTOR2I& aPoint, VERTEX_INDEX& aClosestVertex,
+                                 int aClearance )
+{
+    // Shows whether there was a collision
+    bool collision = false;
+
+    // Iterate through all the contours
+    for( unsigned int contourIdx = 0; contourIdx < m_contours.size(); contourIdx++ )
+    {
+        SHAPE_LINE_CHAIN currentContour = Contour( contourIdx );
+
+        // Iterate through all the segments
+        for( int segmentIdx = 0; segmentIdx < currentContour.PointCount(); segmentIdx++ )
+        {
+            SEG currentSegment = currentContour.Segment(segmentIdx);
+            int distance = currentSegment.LineDistance( aPoint );
+
+            // Check for collisions
+            if(distance <= aClearance)
             {
-                // Get the difference vector between current vertex and aPoint
-                delta = m_polys[outlineIdx][holeIdx][vertexIdx] - aPoint;
+                collision = true;
 
-                // Compute distance
-                ecoord squaredDistance = delta.SquaredEuclideanNorm();
+                // Update aClearance to look for closer edges
+                aClearance = distance;
 
-                if(squaredDistance <= squaredClearance)
-                {
-                    // Update aClearance to look for closer vertices
-                    squaredClearance = squaredDistance;
+                // Store the indices that identify the vertex
+                aClosestVertex.m_contourIdx = contourIdx;
 
-                    // Store the indices that identify the vertex
-                    closestVertex.aOutline = outlineIdx;
-                    closestVertex.aHole = holeIdx;
-                    closestVertex.aVertex = vertexIdx;
-                }
+                // Find the index of the segment start
+                aClosestVertex.m_vertexIdx = currentContour.Find(currentSegment.A);
             }
         }
     }
 
-    return closestVertex;
-}
-
-VERTEX_INDEX CollideEdge( const VECTOR2I$ aPoint, int aClearance = 0 )
-{
-    ITERATOR iterator = Iterate();
+    return collision;
 }
 
 bool SHAPE_POLY_SET::Contains( const VECTOR2I& aP, int aSubpolyIndex ) const

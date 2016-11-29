@@ -233,7 +233,7 @@ public:
      */
     bool HitTestInsideZone( const wxPoint& aPosition ) const
     {
-        return m_Poly->Contains( VECTOR2I( aPosition.x, aPosition.y ) );
+        return m_Poly->Contains( VECTOR2I( aPosition.x, aPosition.y ), 0 );
     }
 
     /**
@@ -312,8 +312,8 @@ public:
      * if both aMinClearanceValue = 0 and aUseNetClearance = false: create the zone outline polygon.
      */
     void TransformOutlinesShapeWithClearanceToPolygon( SHAPE_POLY_SET& aCornerBuffer,
-                                               int                    aMinClearanceValue,
-                                               bool                   aUseNetClearance );
+                                                        int aMinClearanceValue,
+                                                        bool aUseNetClearance );
     /**
      * Function HitTestForCorner
      * tests if the given wxPoint near a corner
@@ -422,7 +422,13 @@ public:
 
     const wxPoint& GetCornerPosition( int aCornerIndex ) const
     {
-        return m_Poly->GetPos( aCornerIndex );
+        int polygonIdx, contourIdx, vertexIdx;
+
+        // Convert global to relative indices
+        assert( FindIndices( aCornerIndex, polygonIdx, contourIdx, vertexIdx ) )
+
+        // FIXME: Convert VECTOR2I to wxPoint
+        return m_Poly->Vertex( vertexIdx, polygonIdx, contourIdx - 1 );
     }
 
     void SetCornerPosition( int aCornerIndex, wxPoint new_pos )
@@ -545,8 +551,8 @@ public:
 private:
     void buildFeatureHoleList( BOARD* aPcb, SHAPE_POLY_SET& aFeatures );
 
-    SHAPE_POLY_SET*            m_Poly;                ///< Outline of the zone.
-    SHAPE_POLY_SET*            m_smoothedPoly;        // Corner-smoothed version of m_Poly
+    SHAPE_POLY_SET*       m_Poly;                ///< Outline of the zone.
+    SHAPE_POLY_SET*       m_smoothedPoly;        // Corner-smoothed version of m_Poly
     int                   m_cornerSmoothingType;
     unsigned int          m_cornerRadius;
 
