@@ -1672,7 +1672,7 @@ void PCB_IO::format( ZONE_CONTAINER* aZone, int aNestLevel ) const
 
                 m_out->Print( aNestLevel+2, ")\n" );
 
-                if( !it.IsLastContour() )
+                if( !it.IsLastPolygon() )
                 {
                     newLine = 0;
                     m_out->Print( aNestLevel+1, ")\n" );
