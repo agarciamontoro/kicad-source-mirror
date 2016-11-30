@@ -137,6 +137,9 @@ ZONE_CONTAINER::~ZONE_CONTAINER()
 {
     delete m_Poly;
     m_Poly = NULL;
+
+    delete m_CornerSelection;
+    m_CornerSelection = nullptr;
 }
 
 
