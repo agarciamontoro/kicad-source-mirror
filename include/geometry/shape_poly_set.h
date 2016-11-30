@@ -55,9 +55,9 @@ class SHAPE_POLY_SET : public SHAPE
          * the hole.
          */
         typedef struct{
-            int aOutline;   /*!< aOutline is the index of the outline. */
-            int aHole;      /*!< aHole is the index of the hole. */
-            int aVertex;    /*!< aVertex is the index of the vertex. */
+            int m_polygon;   /*!< aPolygon is the index of the polygon. */
+            int m_contour;      /*!< aContour is the index of the contour. */
+            int m_vertex;    /*!< aVertex is the index of the vertex. */
         } VERTEX_INDEX;
 
         /**
@@ -124,7 +124,9 @@ class SHAPE_POLY_SET : public SHAPE
 
                         // If the last contour of the current polygon was reached, advance the
                         // outline index
-                        if( m_currentContour >= m_poly->CPolygon( m_currentPolygon ).size() )
+                        int totalContours = m_poly->CPolygon( m_currentPolygon ).size();
+
+                        if( m_currentContour >= totalContours )
                         {
                             m_currentContour = 0;
                             m_currentPolygon++;
@@ -154,7 +156,7 @@ class SHAPE_POLY_SET : public SHAPE
 
             T& Get()
             {
-                return m_poly->Polygon( m_currentPolygon )[m_currentContour].Point( m_currentVertex );
+                return m_poly->Polygon(m_currentPolygon)[m_currentContour].Point(m_currentVertex);
             }
 
             T& operator*()
@@ -173,7 +175,7 @@ class SHAPE_POLY_SET : public SHAPE
 
             SHAPE_POLY_SET* m_poly;
             int m_currentPolygon;
-            int m_currentHole;
+            int m_currentContour;
             int m_currentVertex;
             int m_lastPolygon;
             bool m_iterateHoles;
@@ -194,11 +196,11 @@ class SHAPE_POLY_SET : public SHAPE
         ~SHAPE_POLY_SET();
 
         /**
-         * Function FindIndices
+         * Function GetRelativeIndices
          *
          * Converts a global vertex index ---i.e., a number that globally identifies a vertex in a
-         * concatenated list of all vertices in all contours--- and get the nidex of the vertex
-         * relative to the contour relative to the polygon ni which it is.
+         * concatenated list of all vertices in all contours--- and get the index of the vertex
+         * relative to the contour relative to the polygon in which it is.
          * @param  aGlobalIdx  is the global index of the corner whose structured index wants to
          *                     be found
          * @param  aPolygonIdx is the index of the polygon in which the expected vertex is.
@@ -208,7 +210,9 @@ class SHAPE_POLY_SET : public SHAPE
          *                     the expected vertex is.
          * @return             [description]
          */
-        bool FindIndices( int aGlobalIdx, int& aPolygonIdx, int& aContourIdx, int& aVertexIdx);
+        bool GetRelativeIndices( int aGlobalIdx, VERTEX_INDEX* aRelativeIndices);
+
+        bool GetGlobalIndex( VERTEX_INDEX aRelativeIndices, int& aGlobalIdx );
 
         /// @copydoc SHAPE::Clone()
         SHAPE* Clone() const override;
@@ -239,6 +243,12 @@ class SHAPE_POLY_SET : public SHAPE
 
         ///> Returns the index-th vertex in a given hole outline within a given outline
         const VECTOR2I& CVertex( int index, int aOutline = -1, int aHole = -1 ) const;
+
+        ///> Returns the index-th vertex in a given hole outline within a given outline
+        VECTOR2I& Vertex( VERTEX_INDEX index );
+
+        ///> Returns the index-th vertex in a given hole outline within a given outline
+        const VECTOR2I& CVertex(VERTEX_INDEX index ) const;
 
         ///> Returns true if any of the outlines is self-intersecting
         bool IsSelfIntersecting();
@@ -290,8 +300,9 @@ class SHAPE_POLY_SET : public SHAPE
             return m_polys[aIndex];
         }
 
-        ///> Returns an iterator object, for iterating between aFirst and aLast outline.
-        ITERATOR Iterate( int aFirst, int aLast )
+        ///> Returns an iterator object, for iterating between aFirst and aLast outline, with or
+        /// without holes (default: without)
+        ITERATOR Iterate( int aFirst, int aLast, bool aIterateHoles = false )
         {
             ITERATOR iter;
 
@@ -299,6 +310,7 @@ class SHAPE_POLY_SET : public SHAPE
             iter.m_currentPolygon = aFirst;
             iter.m_lastPolygon = aLast < 0 ? OutlineCount() - 1 : aLast;
             iter.m_currentVertex = 0;
+            iter.m_iterateHoles = aIterateHoles;
 
             return iter;
         }
@@ -309,13 +321,26 @@ class SHAPE_POLY_SET : public SHAPE
             return Iterate( aOutline, aOutline );
         }
 
+        ///> Returns an iterator object, for iterating aOutline-th outline
+        ITERATOR IterateWithHoles( int aOutline )
+        {
+            return Iterate( aOutline, aOutline, true );
+        }
+
         ///> Returns an iterator object, for all outlines in the set (no holes)
         ITERATOR Iterate()
         {
             return Iterate( 0, OutlineCount() - 1 );
         }
 
-        CONST_ITERATOR CIterate( int aFirst, int aLast ) const
+        ///> Returns an iterator object, for all outlines in the set (with holes)
+        ITERATOR IterateWithHoles()
+        {
+            return Iterate( 0, OutlineCount() - 1, true );
+        }
+
+
+        CONST_ITERATOR CIterate( int aFirst, int aLast, bool aIterateHoles = false ) const
         {
             CONST_ITERATOR iter;
 
@@ -323,6 +348,7 @@ class SHAPE_POLY_SET : public SHAPE
             iter.m_currentPolygon = aFirst;
             iter.m_lastPolygon = aLast < 0 ? OutlineCount() - 1 : aLast;
             iter.m_currentVertex = 0;
+            iter.m_iterateHoles = aIterateHoles;
 
             return iter;
         }
@@ -332,9 +358,19 @@ class SHAPE_POLY_SET : public SHAPE
             return CIterate( aOutline, aOutline );
         }
 
+        CONST_ITERATOR CIterateWithHoles( int aOutline ) const
+        {
+            return CIterate( aOutline, aOutline, true );
+        }
+
         CONST_ITERATOR CIterate() const
         {
             return CIterate( 0, OutlineCount() - 1 );
+        }
+
+        CONST_ITERATOR CIterateWithHoles() const
+        {
+            return CIterate( 0, OutlineCount() - 1, true );
         }
 
         /** operations on polygons use a aFastMode param

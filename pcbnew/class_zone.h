@@ -40,7 +40,7 @@
 #include <PolyLine.h>
 #include <class_zone_settings.h>
 
-#include <shape_poly_set.h>
+#include <geometry/shape_poly_set.h>
 
 
 class EDA_RECT;
@@ -198,8 +198,23 @@ public:
     int GetMinThickness() const { return m_ZoneMinThickness; }
     void SetMinThickness( int aMinThickness ) { m_ZoneMinThickness = aMinThickness; }
 
-    int GetSelectedCorner() const { return m_CornerSelection; }
-    void SetSelectedCorner( int aCorner ) { m_CornerSelection = aCorner; }
+    int GetSelectedCorner() const
+    {
+        // Transform relative indices to global index
+        int globalIndex;
+        m_Poly->GetGlobalIndex( *m_CornerSelection, globalIndex );
+
+        return globalIndex;
+    }
+
+    void SetSelectedCorner( int aCorner )
+    {
+        if( !m_CornerSelection )
+            m_CornerSelection = new SHAPE_POLY_SET::VERTEX_INDEX;
+
+        // Convert global to relative indices
+        assert( m_Poly->GetRelativeIndices( aCorner, m_CornerSelection ) );
+    }
 
     ///
     // Like HitTest but selects the current corner to be operated on
@@ -420,36 +435,48 @@ public:
         m_Poly->RemoveAllContours();
     }
 
-    const wxPoint& GetCornerPosition( int aCornerIndex ) const
+    const wxPoint GetCornerPosition( int aCornerIndex ) const
     {
-        int polygonIdx, contourIdx, vertexIdx;
+        SHAPE_POLY_SET::VERTEX_INDEX index;
 
         // Convert global to relative indices
-        assert( FindIndices( aCornerIndex, polygonIdx, contourIdx, vertexIdx ) )
+        assert( m_Poly->GetRelativeIndices( aCornerIndex, &index ) );
 
-        // FIXME: Convert VECTOR2I to wxPoint
-        return m_Poly->Vertex( vertexIdx, polygonIdx, contourIdx - 1 );
+        wxPoint corner;
+
+        corner.x = m_Poly->CVertex( index ).x;
+        corner.y = m_Poly->CVertex( index ).y;
+
+        return corner;
     }
 
     void SetCornerPosition( int aCornerIndex, wxPoint new_pos )
     {
-        m_Poly->SetX( aCornerIndex, new_pos.x );
-        m_Poly->SetY( aCornerIndex, new_pos.y );
+        SHAPE_POLY_SET::VERTEX_INDEX relativeIndices;
+
+        // Convert global to relative indices
+        assert( m_Poly->GetRelativeIndices( aCornerIndex, &relativeIndices ) );
+
+        m_Poly->Vertex( relativeIndices ).x = new_pos.x;
+        m_Poly->Vertex( relativeIndices ).y = new_pos.y;
     }
 
     void AppendCorner( wxPoint position )
     {
-        m_Poly->AppendCorner( position.x, position.y );
+        m_Poly->Append( position.x, position.y );
     }
 
     int GetHatchStyle() const
     {
-        return m_Poly->GetHatchStyle();
+        // FIXME: IMPLEMENT what is now commented
+        // return m_Poly->GetHatchStyle();
+        return 0;
     }
 
     void SetHatchStyle( CPolyLine::HATCH_STYLE aStyle )
     {
-        m_Poly->SetHatchStyle( aStyle );
+        // FIXME: IMPLEMENT what is now commented
+        // m_Poly->SetHatchStyle( aStyle );
     }
 
     /**
