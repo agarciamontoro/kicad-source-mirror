@@ -712,6 +712,36 @@ void SHAPE_POLY_SET::Simplify( POLYGON_MODE aFastMode )
     booleanOp( ctUnion, empty, aFastMode );
 }
 
+int SHAPE_POLY_SET::NormalizeAreaOutlines()
+{
+    // We are expecting only one main outline, but this main outline can have holes
+    // if holes: combine holes and remove them from the main outline.
+    // Note also we are using SHAPE_POLY_SET::PM_STRICTLY_SIMPLE in polygon
+    // calculations, but it is not mandatory. It is used mainly
+    // because there is usually only very few vertices in area outlines
+    SHAPE_POLY_SET::POLYGON& outline = Polygon( 0 );
+    SHAPE_POLY_SET holesBuffer;
+
+    // Move holes stored in outline to holesBuffer:
+    // The first SHAPE_LINE_CHAIN is the main outline, others are holes
+    while( outline.size() > 1 )
+    {
+        holesBuffer.AddOutline( outline.back() );
+        outline.pop_back();
+    }
+
+    Simplify( SHAPE_POLY_SET::PM_STRICTLY_SIMPLE );
+
+    // If any hole, substract it to main outline
+    if( holesBuffer.OutlineCount() )
+    {
+        holesBuffer.Simplify( SHAPE_POLY_SET::PM_FAST);
+        BooleanSubtract( holesBuffer, SHAPE_POLY_SET::PM_STRICTLY_SIMPLE );
+    }
+
+    return OutlineCount();
+}
+
 
 const std::string SHAPE_POLY_SET::Format() const
 {

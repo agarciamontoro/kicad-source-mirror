@@ -186,6 +186,9 @@ class SHAPE_POLY_SET : public SHAPE
 
         SHAPE_POLY_SET();
 
+        SHAPE_POLY_SET( const POLYGON& aPolygon );
+
+
         /**
          * Copy constructor SHAPE_POLY_SET
          * Performs a deep copy of \p aOther into \p this.
@@ -271,6 +274,25 @@ class SHAPE_POLY_SET : public SHAPE
         SHAPE_LINE_CHAIN& Outline( int aIndex )
         {
             return m_polys[aIndex][0];
+        }
+
+        SHAPE_POLY_SET Subset( int aFirstPolygon, int aLastPolygon )
+        {
+            assert( aFirstPolygon >= 0 && aLastPolygon < OutlineCount() );
+
+            SHAPE_POLY_SET newPolySet;
+
+            for( int index = aFirstPolygon; index < aLastPolygon; index++ )
+            {
+                newPolySet.m_polys.push_back( Polygon( index ) );
+            }
+
+            return newPolySet;
+        }
+
+        SHAPE_POLY_SET UnitSet( int aPolygonIndex )
+        {
+            return Subset( aPolygonIndex, aPolygonIndex + 1 );
         }
 
         ///> Returns the reference to aHole-th hole in the aIndex-th outline
@@ -430,6 +452,15 @@ class SHAPE_POLY_SET : public SHAPE
         ///> Simplifies the polyset (merges overlapping polys, eliminates degeneracy/self-intersections)
         ///> For aFastMode meaning, see function booleanOp
         void Simplify( POLYGON_MODE aFastMode );
+
+        /**
+         * Function NormalizeAreaOutlines
+         * Convert a self-intersecting polygon to one (or more) non self-intersecting polygon(s)
+         * Removes null segments.
+         * @return the polygon count (always >= 1, because there is at least one polygon)
+         * There are new polygons only if the polygon count  is > 1
+         */
+        int NormalizeAreaOutlines();
 
         /// @copydoc SHAPE::Format()
         const std::string Format() const override;
