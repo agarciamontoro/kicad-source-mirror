@@ -2370,7 +2370,7 @@ ZONE_CONTAINER* BOARD::InsertArea( int netcode, int iarea, LAYER_ID layer, int x
 
 bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAINER* aCurrArea )
 {
-    CPolyLine* curr_polygon = aCurrArea->Outline();
+    SHAPE_POLY_SET* curr_polygon = aCurrArea->Outline();
 
     // mark all areas as unmodified except this one, if modified
     for( unsigned ia = 0; ia < m_ZoneDescriptorList.size(); ia++ )
@@ -2378,11 +2378,15 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
 
     aCurrArea->SetLocalFlags( 1 );
 
-    if( curr_polygon->IsPolygonSelfIntersecting() )
+    if( curr_polygon->IsSelfIntersecting() )
     {
-        std::vector<CPolyLine*>* pa = new std::vector<CPolyLine*>;
+        // Copy area outline
+        SHAPE_POLY_SET* pa = new SHAPE_POLY_SET( *curr_polygon );
+
+        // Normalize copied area and store resulting number of polygons
+        int n_poly = pa->NormalizeAreaOutlines();
+
         curr_polygon->UnHatch();
-        int n_poly = aCurrArea->Outline()->NormalizeAreaOutlines( pa );
 
         // If clipping has created some polygons, we must add these new copper areas.
         if( n_poly > 1 )
@@ -2391,8 +2395,8 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
 
             for( int ip = 1; ip < n_poly; ip++ )
             {
-                // create new copper area and copy poly into it
-                CPolyLine* new_p = (*pa)[ip - 1];
+                // Create new copper area and copy poly into it
+                SHAPE_POLY_SET* new_p = new SHAPE_POLY_SET( pa->UnitSet( ip - 1 ) );
                 NewArea = AddArea( aNewZonesList, aCurrArea->GetNetCode(), aCurrArea->GetLayer(),
                                    wxPoint(0, 0), CPolyLine::NO_HATCH );
 
@@ -2404,8 +2408,6 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
                 NewArea->SetLocalFlags( 1 );
             }
         }
-
-        delete pa;
     }
 
     curr_polygon->Hatch();
