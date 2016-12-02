@@ -2317,10 +2317,8 @@ TRACK* BOARD::CreateLockPoint( wxPoint& aPosition, TRACK* aSegment, PICKED_ITEMS
 ZONE_CONTAINER* BOARD::AddArea( PICKED_ITEMS_LIST* aNewZonesList, int aNetcode,
                                 LAYER_ID aLayer, wxPoint aStartPointPosition, int aHatch )
 {
-    ZONE_CONTAINER* new_area = InsertArea( aNetcode,
-                                           m_ZoneDescriptorList.size( ) - 1,
-                                           aLayer, aStartPointPosition.x,
-                                           aStartPointPosition.y, aHatch );
+    ZONE_CONTAINER* new_area = InsertArea( aNetcode, m_ZoneDescriptorList.size( ) - 1, aLayer,
+                                           aStartPointPosition.x, aStartPointPosition.y, aHatch );
 
     if( aNewZonesList )
     {

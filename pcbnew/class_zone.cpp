@@ -870,3 +870,185 @@ wxString ZONE_CONTAINER::GetSelectMenuText() const
 
     return msg;
 }
+
+void CPolyLine::Hatch()
+{
+    m_HatchLines.clear();
+
+    if( m_hatchStyle == NO_HATCH || m_hatchPitch == 0 )
+        return;
+
+    if( !GetClosed() ) // If not closed, the poly is beeing created and not finalised. Not not hatch
+        return;
+
+    // define range for hatch lines
+    int min_x   = m_CornersList[0].x;
+    int max_x   = m_CornersList[0].x;
+    int min_y   = m_CornersList[0].y;
+    int max_y   = m_CornersList[0].y;
+
+    for( unsigned ic = 1; ic < m_CornersList.GetCornersCount(); ic++ )
+    {
+        if( m_CornersList[ic].x < min_x )
+            min_x = m_CornersList[ic].x;
+
+        if( m_CornersList[ic].x > max_x )
+            max_x = m_CornersList[ic].x;
+
+        if( m_CornersList[ic].y < min_y )
+            min_y = m_CornersList[ic].y;
+
+        if( m_CornersList[ic].y > max_y )
+            max_y = m_CornersList[ic].y;
+    }
+
+    // Calculate spacing between 2 hatch lines
+    int spacing;
+
+    if( m_hatchStyle == DIAGONAL_EDGE )
+        spacing = m_hatchPitch;
+    else
+        spacing = m_hatchPitch * 2;
+
+    // set the "length" of hatch lines (the length on horizontal axis)
+    double  hatch_line_len = m_hatchPitch;
+
+    // To have a better look, give a slope depending on the layer
+    LAYER_NUM layer = GetLayer();
+    int     slope_flag = (layer & 1) ? 1 : -1;  // 1 or -1
+    double  slope = 0.707106 * slope_flag;      // 45 degrees slope
+    int     max_a, min_a;
+
+    if( slope_flag == 1 )
+    {
+        max_a   = KiROUND( max_y - slope * min_x );
+        min_a   = KiROUND( min_y - slope * max_x );
+    }
+    else
+    {
+        max_a   = KiROUND( max_y - slope * max_x );
+        min_a   = KiROUND( min_y - slope * min_x );
+    }
+
+    min_a = (min_a / spacing) * spacing;
+
+    // calculate an offset depending on layer number,
+    // for a better look of hatches on a multilayer board
+    int offset = (layer * 7) / 8;
+    min_a += offset;
+
+    // now calculate and draw hatch lines
+    int nc = m_CornersList.GetCornersCount();
+
+    // loop through hatch lines
+    #define MAXPTS 200      // Usually we store only few values per one hatch line
+                            // depending on the compexity of the zone outline
+
+    static std::vector <wxPoint> pointbuffer;
+    pointbuffer.clear();
+    pointbuffer.reserve( MAXPTS + 2 );
+
+    for( int a = min_a; a < max_a; a += spacing )
+    {
+        // get intersection points for this hatch line
+
+        // Note: because we should have an even number of intersections with the
+        // current hatch line and the zone outline (a closed polygon,
+        // or a set of closed polygons), if an odd count is found
+        // we skip this line (should not occur)
+        pointbuffer.clear();
+        int i_start_contour = 0;
+
+        for( int ic = 0; ic<nc; ic++ )
+        {
+            double  x, y, x2, y2;
+            int     ok;
+
+            if( m_CornersList[ic].end_contour ||
+                ( ic == (int) (m_CornersList.GetCornersCount() - 1) ) )
+            {
+                ok = FindLineSegmentIntersection( a, slope,
+                                                  m_CornersList[ic].x, m_CornersList[ic].y,
+                                                  m_CornersList[i_start_contour].x,
+                                                  m_CornersList[i_start_contour].y,
+                                                  &x, &y, &x2, &y2 );
+                i_start_contour = ic + 1;
+            }
+            else
+            {
+                ok = FindLineSegmentIntersection( a, slope,
+                                                  m_CornersList[ic].x, m_CornersList[ic].y,
+                                                  m_CornersList[ic + 1].x, m_CornersList[ic + 1].y,
+                                                  &x, &y, &x2, &y2 );
+            }
+
+            if( ok )
+            {
+                wxPoint point( KiROUND( x ), KiROUND( y ) );
+                pointbuffer.push_back( point );
+            }
+
+            if( ok == 2 )
+            {
+                wxPoint point( KiROUND( x2 ), KiROUND( y2 ) );
+                pointbuffer.push_back( point );
+            }
+
+            if( pointbuffer.size() >= MAXPTS )    // overflow
+            {
+                wxASSERT( 0 );
+                break;
+            }
+        }
+
+        // ensure we have found an even intersection points count
+        // because intersections are the ends of segments
+        // inside the polygon(s) and a segment has 2 ends.
+        // if not, this is a strange case (a bug ?) so skip this hatch
+        if( pointbuffer.size() % 2 != 0 )
+            continue;
+
+        // sort points in order of descending x (if more than 2) to
+        // ensure the starting point and the ending point of the same segment
+        // are stored one just after the other.
+        if( pointbuffer.size() > 2 )
+            sort( pointbuffer.begin(), pointbuffer.end(), sort_ends_by_descending_X );
+
+        // creates lines or short segments inside the complex polygon
+        for( unsigned ip = 0; ip < pointbuffer.size(); ip += 2 )
+        {
+            double dx = pointbuffer[ip + 1].x - pointbuffer[ip].x;
+
+            // Push only one line for diagonal hatch,
+            // or for small lines < twice the line len
+            // else push 2 small lines
+            if( m_hatchStyle == DIAGONAL_FULL || fabs( dx ) < 2 * hatch_line_len )
+            {
+                m_HatchLines.push_back( CSegment( pointbuffer[ip], pointbuffer[ip + 1] ) );
+            }
+            else
+            {
+                double dy = pointbuffer[ip + 1].y - pointbuffer[ip].y;
+                slope = dy / dx;
+
+                if( dx > 0 )
+                    dx = hatch_line_len;
+                else
+                    dx = -hatch_line_len;
+
+                double  x1  = pointbuffer[ip].x + dx;
+                double  x2  = pointbuffer[ip + 1].x - dx;
+                double  y1  = pointbuffer[ip].y + dx * slope;
+                double  y2  = pointbuffer[ip + 1].y - dx * slope;
+
+                m_HatchLines.push_back( CSegment( pointbuffer[ip].x,
+                                                  pointbuffer[ip].y,
+                                                  KiROUND( x1 ), KiROUND( y1 ) ) );
+
+                m_HatchLines.push_back( CSegment( pointbuffer[ip + 1].x,
+                                                  pointbuffer[ip + 1].y,
+                                                  KiROUND( x2 ), KiROUND( y2 ) ) );
+            }
+        }
+    }
+}
