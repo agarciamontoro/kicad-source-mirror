@@ -80,6 +80,11 @@ class ZONE_CONTAINER : public BOARD_CONNECTED_ITEM
 {
 public:
 
+    /**
+     * Zone hatch styles
+     */
+    enum HATCH_STYLE { NO_HATCH, DIAGONAL_FULL, DIAGONAL_EDGE };
+
     ZONE_CONTAINER( BOARD* parent );
 
     ZONE_CONTAINER( const ZONE_CONTAINER& aZone );
@@ -467,15 +472,14 @@ public:
 
     int GetHatchStyle() const
     {
-        // FIXME: IMPLEMENT what is now commented
-        // return m_Poly->GetHatchStyle();
-        return 0;
+        // REVIEW: this was implemented callnig the correspondent method on CPolyLine
+        return m_hatchStyle;
     }
 
-    void SetHatchStyle( CPolyLine::HATCH_STYLE aStyle )
+    void SetHatchStyle( HATCH_STYLE aStyle )
     {
-        // FIXME: IMPLEMENT what is now commented
-        // m_Poly->SetHatchStyle( aStyle );
+        // REVIEW: this was implemented callnig the correspondent method on CPolyLine
+        m_hatchStyle = aStyle;
     }
 
     /**
@@ -636,14 +640,21 @@ private:
      * from outlines (m_Poly) but unlike m_Poly these filled polygons have no hole
      * (they are all in one piece)  In very simple cases m_FilledPolysList is same
      * as m_Poly.  In less simple cases (when m_Poly has holes) m_FilledPolysList is
-
-
-
      * a polygon equivalent to m_Poly, without holes but with extra outline segment
      * connecting "holes" with external main outline.  In complex cases an outline
      * described by m_Poly can have many filled areas
      */
     SHAPE_POLY_SET m_FilledPolysList;
+
+    /**
+     * Zone hatch style
+     */
+    enum HATCH_STYLE    m_hatchStyle;
+
+    /**
+     * Hatch ilnes
+     */
+    std::vector<SEGMENT> m_HatchLines;
 };
 
 
