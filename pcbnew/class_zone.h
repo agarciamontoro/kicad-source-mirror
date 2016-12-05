@@ -83,7 +83,7 @@ public:
     /**
      * Zone hatch styles
      */
-    enum HATCH_STYLE { NO_HATCH, DIAGONAL_FULL, DIAGONAL_EDGE };
+    typedef enum HATCH_STYLE { NO_HATCH, DIAGONAL_FULL, DIAGONAL_EDGE } HATCH_STYLE;
 
     ZONE_CONTAINER( BOARD* parent );
 
@@ -335,21 +335,25 @@ public:
                                                         bool aUseNetClearance );
     /**
      * Function HitTestForCorner
-     * tests if the given wxPoint near a corner
-     * Set m_CornerSelection to -1 if nothing found, or index of corner
-     * @return true if found
-     * @param refPos : A wxPoint to test
+     * tests if the given wxPoint is near a corner.
+     * @param  refPos     is the wxPoint to test.
+     * @param  aCornerHit [out] is the index of the closest vertex found, useless when return
+     *                    value is false.
+     * @return true if some corner was found to be closer to refPos than aClearance.
      */
-    int HitTestForCorner( const wxPoint& refPos ) const;
+    bool HitTestForCorner( const wxPoint& refPos, SHAPE_POLY_SET::VERTEX_INDEX& aCornerHit ) const;
+    bool HitTestForCorner( const wxPoint& refPos ) const;
 
     /**
      * Function HitTestForEdge
      * tests if the given wxPoint is near a segment defined by 2 corners.
-     * Set m_CornerSelection to -1 if nothing found, or index of the starting corner of vertice
-     * @return true if found
-     * @param refPos : A wxPoint to test
+     * @param  refPos     is the wxPoint to test.
+     * @param  aCornerHit [out] is the index of the closest vertex found, useless when return
+     *                    value is false.
+     * @return true if some edge was found to be closer to refPos than aClearance.
      */
-    int HitTestForEdge( const wxPoint& refPos ) const;
+    bool HitTestForEdge( const wxPoint& refPos, SHAPE_POLY_SET::VERTEX_INDEX& aCornerHit ) const;
+    bool HitTestForEdge( const wxPoint& refPos ) const;
 
     /** @copydoc BOARD_ITEM::HitTest(const EDA_RECT& aRect,
      *                               bool aContained = true, int aAccuracy ) const
@@ -470,7 +474,7 @@ public:
         m_Poly->Append( position.x, position.y );
     }
 
-    int GetHatchStyle() const
+    HATCH_STYLE GetHatchStyle() const
     {
         // REVIEW: this was implemented callnig the correspondent method on CPolyLine
         return m_hatchStyle;
@@ -572,6 +576,17 @@ public:
     void SetDoNotAllowVias( bool aEnable ) { m_doNotAllowVias = aEnable; }
     void SetDoNotAllowTracks( bool aEnable ) { m_doNotAllowTracks = aEnable; }
 
+    /**
+     * Hatch related methods
+     */
+     int    GetHatchPitch() const;
+     static int GetDefaultHatchPitchMils() { return 20; } // FIXME: Ugly hardcoded value
+     void   SetHatch( int aHatchStyle, int aHatchPitch, bool aRebuildHatch );
+     void   SetHatchPitch( int pitch );
+     void   UnHatch();
+     void   Hatch();
+
+
 #if defined(DEBUG)
     virtual void Show( int nestLevel, std::ostream& os ) const override { ShowDummy( os ); }
 #endif
@@ -649,12 +664,17 @@ private:
     /**
      * Zone hatch style
      */
-    enum HATCH_STYLE    m_hatchStyle;
+    HATCH_STYLE    m_hatchStyle;
 
     /**
-     * Hatch ilnes
+     * For DIAGONAL_EDGE hatched outlines, basic distance between 2 hatch lines
      */
-    std::vector<SEGMENT> m_HatchLines;
+    int                 m_hatchPitch;
+
+    /**
+     * Hatch lines
+     */
+    std::vector<SEG> m_HatchLines;
 };
 
 

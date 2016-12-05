@@ -116,6 +116,16 @@ public:
         return VECTOR2<CastedType>( (CastedType) x, (CastedType) y );
     }
 
+    /**
+     * Function operator(wxPoint)
+     * implements the cast to wxPoint.
+     * @return wxPoint - the vector casted to wxPoint.
+     */
+    operator wxPoint() const
+    {
+        return wxPoint(x, y);
+    }
+
     /// Destructor
     // virtual ~VECTOR2();
 

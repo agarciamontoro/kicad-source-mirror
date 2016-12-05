@@ -4,6 +4,9 @@ sudo: required
 
 language: cpp
 
+# Enables the caching support to speed up compilations
+cache: ccache
+
 compiler:
     - gcc
 
@@ -16,6 +19,8 @@ install:
     - mkdir build
     - cd build
     - cmake ../
+    - make common
+    - make pcbnew
     - make
     - make MyTests
 
