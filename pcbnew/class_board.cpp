@@ -2355,13 +2355,15 @@ ZONE_CONTAINER* BOARD::InsertArea( int netcode, int iarea, LAYER_ID layer, int x
     new_area->SetNetCode( netcode );
     new_area->SetLayer( layer );
     new_area->SetTimeStamp( GetNewTimeStamp() );
+    new_area->SetHatchStyle( (ZONE_CONTAINER::HATCH_STYLE) hatch );
+    new_area->Outline()->Append( x, y );
 
     if( iarea < (int) ( m_ZoneDescriptorList.size() - 1 ) )
         m_ZoneDescriptorList.insert( m_ZoneDescriptorList.begin() + iarea + 1, new_area );
     else
         m_ZoneDescriptorList.push_back( new_area );
 
-    new_area->Outline()->Start( layer, x, y, hatch );
+    // new_area->Outline()->Start( layer, x, y, hatch );
     return new_area;
 }
 
@@ -2384,7 +2386,7 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
         // Normalize copied area and store resulting number of polygons
         int n_poly = pa->NormalizeAreaOutlines();
 
-        curr_polygon->UnHatch();
+        // curr_polygon->UnHatch();
 
         // If clipping has created some polygons, we must add these new copper areas.
         if( n_poly > 1 )
@@ -2402,13 +2404,13 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
                 // and replace it with a poly from NormalizeAreaOutlines
                 delete NewArea->Outline();
                 NewArea->SetOutline( new_p );
-                NewArea->Outline()->Hatch();
+                NewArea->Hatch();
                 NewArea->SetLocalFlags( 1 );
             }
         }
     }
 
-    curr_polygon->Hatch();
+    // curr_polygon->Hatch();
 
     return true;
 }
