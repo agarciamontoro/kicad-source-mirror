@@ -438,6 +438,22 @@ public:
         return m_Poly->TotalVertices();
     }
 
+    SHAPE_POLY_SET::ITERATOR Iterate()
+    {
+        return m_Poly->Iterate();
+    }
+
+
+    SHAPE_POLY_SET::ITERATOR IterateWithHoles()
+    {
+        return m_Poly->IterateWithHoles();
+    }
+
+    SHAPE_POLY_SET::ITERATOR IterateWithHoles() const
+    {
+        return m_Poly->IterateWithHoles();
+    }
+
     void RemoveAllContours( void )
     {
         m_Poly->RemoveAllContours();
@@ -469,8 +485,16 @@ public:
         m_Poly->Vertex( relativeIndices ).y = new_pos.y;
     }
 
+    void NewHole()
+    {
+        m_Poly->NewHole();
+    }
+
     void AppendCorner( wxPoint position )
     {
+        if( m_Poly->OutlineCount() == 0 )
+            m_Poly->NewOutline();
+
         m_Poly->Append( position.x, position.y );
     }
 

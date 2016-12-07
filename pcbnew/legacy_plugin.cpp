@@ -2501,17 +2501,13 @@ void LEGACY_PLUGIN::loadZONE_CONTAINER()
             // e.g. "ZCorner 25650 49500 0"
             BIU x    = biuParse( line + SZ( "ZCorner" ), &data );
             BIU y    = biuParse( data, &data );
-            int flag = intParse( data );
 
             if( !sawCorner )
-                zc->Outline()->Start( zc->GetLayer(), x, y, outline_hatch );
+                zc->NewHole();
             else
                 zc->AppendCorner( wxPoint( x, y ) );
 
             sawCorner = true;
-
-            if( flag )
-                zc->Outline()->CloseLastContour();
         }
 
         else if( TESTLINE( "ZInfo" ) )      // general info found
@@ -2736,9 +2732,8 @@ void LEGACY_PLUGIN::loadZONE_CONTAINER()
 
                 // Hatch here, after outlines corners are read
                 // Set hatch here, after outlines corners are read
-                zc->Outline()->SetHatch( outline_hatch,
-                                         Mils2iu( CPolyLine::GetDefaultHatchPitchMils() ),
-                                         true );
+                zc->SetHatch( outline_hatch, Mils2iu( CPolyLine::GetDefaultHatchPitchMils() ),
+                              true );
 
                 m_board->Add( zc.release() );
             }
