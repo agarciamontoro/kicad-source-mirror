@@ -252,7 +252,9 @@ class SHAPE_POLY_SET : public SHAPE
         VECTOR2I& Vertex( VERTEX_INDEX index );
 
         ///> Returns the index-th vertex in a given hole outline within a given outline
-        const VECTOR2I& CVertex(VERTEX_INDEX index ) const;
+        const VECTOR2I& CVertex( VERTEX_INDEX index ) const;
+
+        SEG& Edge( int aGlobalIndex );;
 
         ///> Returns true if any of the outlines is self-intersecting
         bool IsSelfIntersecting();

@@ -251,6 +251,15 @@ const VECTOR2I& SHAPE_POLY_SET::CVertex( SHAPE_POLY_SET::VERTEX_INDEX index ) co
     return CVertex( index.m_vertex, index.m_polygon, index.m_contour - 1 );
 }
 
+SEG& SHAPE_POLY_SET::Edge( int aGlobalIndex )
+{
+    SHAPE_POLY_SET::VERTEX_INDEX indices;
+
+    GetRelativeIndices( aGlobalIndex, &indices );
+
+    m_polys[indices.m_polygon][indices.m_contour].Segment(indices.m_vertex);
+}
+
 int SHAPE_POLY_SET::AddOutline( const SHAPE_LINE_CHAIN& aOutline )
 {
     assert( aOutline.IsClosed() );

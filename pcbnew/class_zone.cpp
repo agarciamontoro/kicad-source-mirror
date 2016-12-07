@@ -742,23 +742,12 @@ void ZONE_CONTAINER::Move( const wxPoint& offset )
 
 void ZONE_CONTAINER::MoveEdge( const wxPoint& offset, int aEdge )
 {
-    // Move the start point of the selected edge:
-    SetCornerPosition( aEdge, GetCornerPosition( aEdge ) + offset );
+    SEG edgeSegment = m_Poly->Edge(aEdge);
 
-    // Move the end point of the selected edge:
-    if( m_Poly->m_CornersList.IsEndContour( aEdge ) || aEdge == GetNumCorners() - 1 )
-    {
-        int icont = m_Poly->GetContour( aEdge );
-        aEdge = m_Poly->GetContourStart( icont );
-    }
-    else
-    {
-        aEdge++;
-    }
+    edgeSegment.A += VECTOR2I(offset);
+    edgeSegment.B += VECTOR2I(offset);
 
-    SetCornerPosition( aEdge, GetCornerPosition( aEdge ) + offset );
-
-    m_Poly->Hatch();
+    Hatch();
 }
 
 
@@ -766,15 +755,15 @@ void ZONE_CONTAINER::Rotate( const wxPoint& centre, double angle )
 {
     wxPoint pos;
 
-    for( unsigned ic = 0; ic < m_Poly->m_CornersList.GetCornersCount(); ic++ )
+    for( SHAPE_POLY_SET::ITERATOR iterator = m_Poly->IterateWithHoles(); iterator; iterator++ )
     {
-        pos = m_Poly->m_CornersList.GetPos( ic );
+        pos = *iterator;
         RotatePoint( &pos, centre, angle );
-        m_Poly->SetX( ic, pos.x );
-        m_Poly->SetY( ic, pos.y );
+        iterator->x = pos.x;
+        iterator->y = pos.y;
     }
 
-    m_Poly->Hatch();
+    Hatch();
 
     /* rotate filled areas: */
     for( SHAPE_POLY_SET::ITERATOR ic = m_FilledPolysList.Iterate(); ic; ++ic )
@@ -798,13 +787,13 @@ void ZONE_CONTAINER::Flip( const wxPoint& aCentre )
 
 void ZONE_CONTAINER::Mirror( const wxPoint& mirror_ref )
 {
-    for( unsigned ic = 0; ic < m_Poly->m_CornersList.GetCornersCount(); ic++ )
+    for( SHAPE_POLY_SET::ITERATOR iterator = m_Poly->IterateWithHoles(); iterator; iterator++ )
     {
-        int py = mirror_ref.y - m_Poly->m_CornersList.GetY( ic );
-        m_Poly->m_CornersList.SetY( ic, py + mirror_ref.y );
+        int py = mirror_ref.y - iterator->y;
+        iterator->y = py + mirror_ref.y;
     }
 
-    m_Poly->Hatch();
+    Hatch();
 
     for( SHAPE_POLY_SET::ITERATOR ic = m_FilledPolysList.Iterate(); ic; ++ic )
     {
@@ -834,18 +823,9 @@ void ZONE_CONTAINER::AddPolygon( std::vector< wxPoint >& aPolygon )
     if( aPolygon.empty() )
         return;
 
-    for( unsigned i = 0;  i < aPolygon.size();  i++ )
-    {
-        if( i == 0 )
-            m_Poly->Start( GetLayer(), aPolygon[i].x, aPolygon[i].y, GetHatchStyle() );
-        else
-            AppendCorner( aPolygon[i] );
-    }
-
-    m_Poly->CloseLastContour();
+    SHAPE_LINE_CHAIN outline;
+    m_Poly->AddOutline( outline );
 }
-
-
 
 wxString ZONE_CONTAINER::GetSelectMenuText() const
 {
@@ -853,9 +833,8 @@ wxString ZONE_CONTAINER::GetSelectMenuText() const
     NETINFO_ITEM* net;
     BOARD* board = GetBoard();
 
-    int ncont = m_Poly->GetContour( m_CornerSelection );
-
-    if( ncont )
+    // Check whether the selected contour is a hole (contour index > 0)
+    if( m_CornerSelection->m_contour )
         text << wxT( " " ) << _( "(Cutout)" );
 
     if( GetIsKeepout() )
@@ -897,11 +876,6 @@ wxString ZONE_CONTAINER::GetSelectMenuText() const
     return msg;
 }
 
-enum HATCH_STYLE ZONE_CONTAINER::GetHatchStyle() const
-{
-    return m_hatchStyle;
-}
-
 int ZONE_CONTAINER::GetHatchPitch() const
 {
     return m_hatchPitch;
@@ -910,15 +884,10 @@ int ZONE_CONTAINER::GetHatchPitch() const
 void ZONE_CONTAINER::SetHatch( int aHatchStyle, int aHatchPitch, bool aRebuildHatch )
 {
     SetHatchPitch( aHatchPitch );
-    m_hatchStyle = (enum HATCH_STYLE) aHatchStyle;
+    m_hatchStyle = (ZONE_CONTAINER::HATCH_STYLE) aHatchStyle;
 
     if( aRebuildHatch )
         Hatch();
-}
-
-void ZONE_CONTAINER::SetHatchStyle( enum HATCH_STYLE style )
-{
-    m_hatchStyle = style;
 }
 
 void ZONE_CONTAINER::SetHatchPitch( int pitch )
@@ -950,12 +919,12 @@ void ZONE_CONTAINER::Hatch()
     //     return;
 
     // define range for hatch lines
-    int min_x   = m_CornersList[0].x;
-    int max_x   = m_CornersList[0].x;
-    int min_y   = m_CornersList[0].y;
-    int max_y   = m_CornersList[0].y;
+    int min_x   = m_Poly->Vertex(0, 0, 0).x;
+    int max_x   = m_Poly->Vertex(0, 0, 0).x;
+    int min_y   = m_Poly->Vertex(0, 0, 0).y;
+    int max_y   = m_Poly->Vertex(0, 0, 0).y;
 
-    for( int iterator = m_Poly->IterateWithHoles(); iterator; iterator++ )
+    for( SHAPE_POLY_SET::ITERATOR iterator = m_Poly->IterateWithHoles(); iterator; iterator++ )
     {
         if( iterator->x < min_x )
             min_x = iterator->x;
@@ -1005,9 +974,6 @@ void ZONE_CONTAINER::Hatch()
     int offset = (layer * 7) / 8;
     min_a += offset;
 
-    // now calculate and draw hatch lines
-    int nc = m_Poly->TotalVertices();
-
     // loop through hatch lines
     #define MAXPTS 200      // Usually we store only few values per one hatch line
                             // depending on the compexity of the zone outline
@@ -1025,48 +991,61 @@ void ZONE_CONTAINER::Hatch()
         // or a set of closed polygons), if an odd count is found
         // we skip this line (should not occur)
         pointbuffer.clear();
-        int i_start_contour = 0;
 
-        for( int ic = 0; ic<nc; ic++ )
+        SHAPE_POLY_SET::ITERATOR iterator = m_Poly->IterateWithHoles();
+
+        VECTOR2I contourStart = *iterator;
+        VECTOR2I segmentStart, segmentEnd;
+
+        // Iterate through all vertices
+        while( iterator )
         {
             double  x, y, x2, y2;
             int     ok;
 
-            if( m_CornersList[ic].end_contour ||
-                ( ic == (int) (m_CornersList.GetCornersCount() - 1) ) )
+            // Build segment
+            segmentStart = *iterator;
+
+            if( iterator.IsEndContour() )
             {
-                ok = FindLineSegmentIntersection( a, slope,
-                                                  m_CornersList[ic].x, m_CornersList[ic].y,
-                                                  m_CornersList[i_start_contour].x,
-                                                  m_CornersList[i_start_contour].y,
-                                                  &x, &y, &x2, &y2 );
-                i_start_contour = ic + 1;
+                segmentEnd = contourStart;
+
+                // Advance
+                iterator++;
+
+                contourStart = *iterator;
             }
             else
             {
-                ok = FindLineSegmentIntersection( a, slope,
-                                                  m_CornersList[ic].x, m_CornersList[ic].y,
-                                                  m_CornersList[ic + 1].x, m_CornersList[ic + 1].y,
-                                                  &x, &y, &x2, &y2 );
+
+                // Advance
+                iterator++;
+
+                segmentEnd = *iterator;
             }
 
-            if( ok )
-            {
-                VECTOR2I point( KiROUND( x ), KiROUND( y ) );
-                pointbuffer.push_back( point );
-            }
+            ok = FindLineSegmentIntersection( a, slope,
+                                              segmentStart.x, segmentStart.y,
+                                              segmentEnd.x, segmentEnd.y,
+                                              &x, &y, &x2, &y2 );
 
-            if( ok == 2 )
-            {
-                VECTOR2I point( KiROUND( x2 ), KiROUND( y2 ) );
-                pointbuffer.push_back( point );
-            }
+              if( ok )
+              {
+                  VECTOR2I point( KiROUND( x ), KiROUND( y ) );
+                  pointbuffer.push_back( point );
+              }
 
-            if( pointbuffer.size() >= MAXPTS )    // overflow
-            {
-                wxASSERT( 0 );
-                break;
-            }
+              if( ok == 2 )
+              {
+                  VECTOR2I point( KiROUND( x2 ), KiROUND( y2 ) );
+                  pointbuffer.push_back( point );
+              }
+
+              if( pointbuffer.size() >= MAXPTS )    // overflow
+              {
+                  wxASSERT( 0 );
+                  break;
+              }
         }
 
         // ensure we have found an even intersection points count

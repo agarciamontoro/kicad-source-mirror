@@ -115,12 +115,11 @@ void ZONE_SETTINGS::ExportSetting( ZONE_CONTAINER& aTarget, bool aFullExport ) c
         aTarget.SetPriority( m_ZonePriority );
         aTarget.SetNetCode( m_NetcodeSelection );
         aTarget.SetLayer( m_CurrentZone_Layer );
-        aTarget.Outline()->SetLayer( m_CurrentZone_Layer );
     }
 
     // call SetHatch last, because hatch lines will be rebuilt,
     // using new parameters values
-    aTarget.Outline()->SetHatch( m_Zone_HatchingStyle, Mils2iu( 20 ), true );
+    aTarget.SetHatch( m_Zone_HatchingStyle, Mils2iu( 20 ), true );
 }
 
 

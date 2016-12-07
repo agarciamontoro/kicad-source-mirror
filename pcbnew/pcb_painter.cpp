@@ -893,12 +893,13 @@ void PCB_PAINTER::draw( const ZONE_CONTAINER* aZone )
     m_gal->SetIsStroke( true );
     m_gal->SetLineWidth( m_pcbSettings.m_outlineWidth );
 
-    const CPolyLine* polygon = aZone->Outline();
-    for( int i = 0; i < polygon->GetCornersCount(); ++i )
-    {
-        corners.push_back( VECTOR2D( polygon->GetPos( i ) ) );
+    SHAPE_POLY_SET::ITERATOR iterator;
 
-        if( polygon->IsEndContour( i ) )
+    for( iterator = aZone->IterateWithHoles(); iterator; iterator++ )
+    {
+        corners.push_back( VECTOR2D( *iterator ) );
+
+        if( iterator.IsEndContour() )
         {
             // The last point for closing the polyline
             corners.push_back( corners[0] );
