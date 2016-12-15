@@ -411,6 +411,17 @@ public:
     void Remove( int aStartIndex, int aEndIndex );
 
     /**
+     * Function Remove()
+     *
+     * Removes the the aIndex-th point from the line chain.
+     * @param aIndex is the idnex of the opint to be removed.
+     */
+    void Remove( int aIndex )
+    {
+        Remove( aIndex, aIndex );
+    }
+
+    /**
      * Function Split()
      *
      * Inserts the point aP belonging to one of the our segments, splitting the adjacent
