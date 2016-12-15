@@ -116,14 +116,18 @@ public:
 
             case PCB_ZONE_AREA_T:
             {
-                const CPolyLine* outline = static_cast<const ZONE_CONTAINER*>( aItem )->Outline();
+                const SHAPE_POLY_SET* outline;
+                outline = static_cast<const ZONE_CONTAINER*>( aItem )->Outline();
+
                 int cornersCount = outline->GetCornersCount();
 
-                for( int i = 0; i < cornersCount; ++i )
-                {
-                    points->AddPoint( outline->GetPos( i ) );
+                SHAPE_POLY_SET::ITERATOR iterator = outline.IterateWithHoles();
 
-                    if( outline->IsEndContour( i ) )
+                while( iterator )
+                {
+                    points->AddPoint( *iterator );
+
+                    if( iterator.IsEndContour() )
                         points->AddBreak();
                 }
 
@@ -468,13 +472,12 @@ void POINT_EDITOR::updateItem() const
     {
         ZONE_CONTAINER* zone = static_cast<ZONE_CONTAINER*>( item );
         zone->ClearFilledPolysList();
-        CPolyLine* outline = zone->Outline();
+        SHAPE_POLY_SET* outline = zone->Outline();
 
-        for( int i = 0; i < outline->GetCornersCount(); ++i )
+        for( int i = 0; i < outline->TotalVertices(); ++i )
         {
             VECTOR2I point = m_editPoints->Point( i ).GetPosition();
-            outline->SetX( i, point.x );
-            outline->SetY( i, point.y );
+            outline->Vertex( i ) = point;
         }
 
         break;
@@ -588,9 +591,9 @@ void POINT_EDITOR::updatePoints()
     case PCB_ZONE_AREA_T:
     {
         const ZONE_CONTAINER* zone = static_cast<const ZONE_CONTAINER*>( item );
-        const CPolyLine* outline = zone->Outline();
+        const SHAPE_POLY_SET* outline = zone->Outline();
 
-        if( m_editPoints->PointsSize() != (unsigned) outline->GetCornersCount() )
+        if( m_editPoints->PointsSize() != (unsigned) outline->TotalVertices() )
         {
             getView()->Remove( m_editPoints.get() );
             m_editPoints = EDIT_POINTS_FACTORY::Make( item, getView()->GetGAL() );
@@ -598,8 +601,8 @@ void POINT_EDITOR::updatePoints()
         }
         else
         {
-            for( int i = 0; i < outline->GetCornersCount(); ++i )
-                m_editPoints->Point( i ).SetPosition( outline->GetPos( i ) );
+            for( int i = 0; i < outline->TotalVertices(); ++i )
+                m_editPoints->Point( i ).SetPosition( outline->Vertex( i ) );
         }
 
         break;
@@ -731,19 +734,18 @@ void POINT_EDITOR::addCorner( const VECTOR2I& aBreakPoint )
     if( item->Type() == PCB_ZONE_AREA_T )
     {
         ZONE_CONTAINER* zone = static_cast<ZONE_CONTAINER*>( item );
-        CPolyLine* outline = zone->Outline();
+        SHAPE_POLY_SET* outline = zone->Outline();
 
         commit.Modify( zone );
 
         // Handle the last segment, so other segments can be easily handled in a loop
-        unsigned int nearestIdx = outline->GetCornersCount() - 1, nextNearestIdx = 0;
-        SEG side( VECTOR2I( outline->GetPos( nearestIdx ) ),
-                  VECTOR2I( outline->GetPos( nextNearestIdx ) ) );
+        unsigned int nearestIdx = outline->TotalVertices() - 1, nextNearestIdx = 0;
+        SEG side( outline->Vertex( nearestIdx ), outline->Vertex( nextNearestIdx ) );
         unsigned int nearestDist = side.Distance( aBreakPoint );
 
-        for( int i = 0; i < outline->GetCornersCount() - 1; ++i )
+        for( int i = 0; i < outline->TotalVertices()() - 1; ++i )
         {
-            side = SEG( VECTOR2I( outline->GetPos( i ) ), VECTOR2I( outline->GetPos( i + 1 ) ) );
+            side = SEG( VECTOR2I( outline->Vertex( i ) ), VECTOR2I( outline->Vertex( i + 1 ) ) );
 
             unsigned int distance = side.Distance( aBreakPoint );
             if( distance < nearestDist )
@@ -755,8 +757,8 @@ void POINT_EDITOR::addCorner( const VECTOR2I& aBreakPoint )
         }
 
         // Find the point on the closest segment
-        VECTOR2I sideOrigin( outline->GetPos( nearestIdx ) );
-        VECTOR2I sideEnd( outline->GetPos( nextNearestIdx ) );
+        VECTOR2I sideOrigin = outline->Vertex( nearestIdx );
+        VECTOR2I sideEnd = outline->Vertex( nextNearestIdx );
         SEG nearestSide( sideOrigin, sideEnd );
         VECTOR2I nearestPoint = nearestSide.NearestPoint( aBreakPoint );
 
@@ -765,7 +767,7 @@ void POINT_EDITOR::addCorner( const VECTOR2I& aBreakPoint )
         if( nearestPoint == sideOrigin || nearestPoint == sideEnd )
             nearestPoint = ( sideOrigin + sideEnd ) / 2;
 
-        outline->InsertCorner( nearestIdx, nearestPoint.x, nearestPoint.y );
+        outline->InsertVertex( nearestIdx, nearestPoint );
 
         commit.Push( _( "Add a zone corner" ) );
     }
@@ -822,14 +824,14 @@ void POINT_EDITOR::removeCorner( EDIT_POINT* aPoint )
         BOARD_COMMIT commit( frame );
 
         ZONE_CONTAINER* zone = static_cast<ZONE_CONTAINER*>( item );
-        CPolyLine* outline = zone->Outline();
+        SHAPE_POLY_SET* outline = zone->Outline();
         commit.Modify( zone );
 
-        for( int i = 0; i < outline->GetCornersCount(); ++i )
+        for( int i = 0; i < outline->TotalVertices(); ++i )
         {
-            if( VECTOR2I( outline->GetPos( i ) ) == aPoint->GetPosition() )
+            if( outline->Vertex( i ) == aPoint->GetPosition() )
             {
-                outline->DeleteCorner( i );
+                outline->RemoveVertex( i );
                 setEditedPoint( NULL );
                 commit.Push( _( "Remove a zone corner" ) );
                 break;

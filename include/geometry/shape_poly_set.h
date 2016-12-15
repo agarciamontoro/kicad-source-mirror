@@ -242,6 +242,15 @@ class SHAPE_POLY_SET : public SHAPE
         ///> Appends a vertex at the end of the given outline/hole (default: the last outline)
         void Append( const VECTOR2I& aP, int aOutline = -1, int aHole = -1 );
 
+        /**
+         * Function InsertVertex
+         * Adds a vertex in teh globally indexed position aGlobalIndex.
+         * @param aGlobalIndex is the global index of the position in which teh new vertex will be
+         *                     inserted.
+         * @param aNewVertex   is the new inserted vertex.
+         */
+        void InsertVertex( int aGlobalIndex, VECTOR2I aNewVertex );
+
         ///> Returns the index-th vertex in a given hole outline within a given outline
         VECTOR2I& Vertex( int index, int aOutline = -1, int aHole = -1 );
 
@@ -254,9 +263,32 @@ class SHAPE_POLY_SET : public SHAPE
         ///> Returns the index-th vertex in a given hole outline within a given outline
         const VECTOR2I& CVertex( VERTEX_INDEX index ) const;
 
-        SEG& Edge( int aGlobalIndex );;
+        /**
+         * Function Edge
+         * Returns a reference to the aGlobalIndex-th segment in the poylgon set. Modifying the
+         * points in the returned object, the corresponding vertices on the polygon set will be
+         * modified
+         * @param  aGlobalIndex is index of the edge, globally indexed betweel all edges in all
+         *                      contours
+         * @return a reference to the aGlobalIndex-th index.
+         */
+        SEG Edge( int aGlobalIndex );;
 
-        ///> Returns true if any of the outlines is self-intersecting
+
+        /**
+         * Function IsPolygonSelfIntersecting.
+         * Checks whether the aPolygonIndex-th polygon in the set is self intersecting.
+         * @param  aPolygonIndex index of the polygon that wants to be checked.
+         * @return bool - true if the aPolygonIndex-th polygon is self intersecting, false
+         * otherwise.
+         */
+        bool IsPolygonSelfIntersecting( int aPolygonIndex );
+
+        /**
+         * Function IsSelfIntersecting
+         * Checks whether any of the polygons in the set is self intersecting.
+         * @return bool - true if any polygon is self intersecting, false otherwise.
+         */
         bool IsSelfIntersecting();
 
         ///> Returns the number of outlines in the set
@@ -543,8 +575,34 @@ class SHAPE_POLY_SET : public SHAPE
             return m_polys.size() == 0;
         }
 
+        void RemoveVertex( int aGlobalIndex )
+        {
+            VERTEX_INDEX index;
+
+            GetRelativeIndices( aGlobalIndex, &index );
+
+            m_polys[index.m_polygon][index.m_contour].Remove(index.m_vertex);
+        }
+
         ///> Removes all outlines & holes (clears) the polygon set.
         void RemoveAllContours();
+
+        /**
+         * Function RemoveContour
+         * Deletes the aContourIdx-th contour of the aPolygonIdx-th polygon in the set.
+         * @param aContourIdx is the index of the contour in the aPolygonIdx-th polygon to be
+         *                    removed.
+         * @param aPolygonIdx is the index of the polygon in which the to-be-removed contour is.
+         *                    Defaults to the last polygon in the set.
+         */
+        void RemoveContour( int aContourIdx, int aPolygonIdx = -1 );
+
+        /**
+         * Function RemoveNullSegments.
+         * Looks for null segments; ie, segments whose ends are exactly the same and deletes them.
+         * @return int - the number of deleted segments.
+         */
+        int RemoveNullSegments();
 
         ///> Returns total number of vertices stored in the set.
         int TotalVertices() const;
@@ -570,6 +628,65 @@ class SHAPE_POLY_SET : public SHAPE
          * @return A POLYGON object containing the filleted version of the aIndex-th polygon.
          */
         POLYGON FilletPolygon( unsigned int aRadius, unsigned int aSegments, int aIndex = 0 );
+
+        /**
+         * Function DistanceToPolygon
+         * Computes the minimum distance between the aIndex-th polygon and aPoint.
+         * @param  aPoint is the point whose distance to the aIndex-th polygon has to be measured.
+         * @param  aIndex is the index of the polygon whose distace to aPoint has to be measured.
+         * @return        The minimum distance between aPoint and all the segments of the aIndex-th
+         *                polygon. If the point is contained in the polygon, the distance is zero.
+         */
+        int DistanceToPolygon( VECTOR2I aPoint, int aIndex );
+
+        /**
+         * Function DistanceToPolygon
+         * Computes the minimum distance between the aIndex-th polygon and aSegment with a
+         * possible width.
+         * @param  aSegment is the segment whose distance to the aIndex-th polygon has to be
+         *                  measured.
+         * @param  aIndex   is the index of the polygon whose distace to aPoint has to be measured.
+         * @param  aSegmentWidth is the width of the segment; defaults to zero.
+         * @return          The minimum distance between aSegment and all the segments of the
+         *                  aIndex-th polygon. If the point is contained in the polygon, the
+         *                  distance is zero.
+         */
+        int DistanceToPolygon( SEG aSegment, int aIndex, int aSegmentWidth = 0 );
+
+        /**
+         * Function DistanceToPolygon
+         * Computes the minimum distance between aPoint and all the polygons in the set
+         * @param  aPoint is the point whose distance to the set has to be measured.
+         * @return        The minimum distance between aPoint and all the polygons in the set. If
+         *                the point is contained in any of the polygons, the distance is zero.
+         */
+        int Distance( VECTOR2I point );
+
+        /**
+         * Function DistanceToPolygon
+         * Computes the minimum distance between aSegment and all the polygons in the set.
+         * @param  aSegment is the segment whose distance to the polygon set has to be measured.
+         * @param  aSegmentWidth is the width of the segment; defaults to zero.
+         * @return          The minimum distance between aSegment and all the polygons in the set.
+         *                  If the point is contained in the polygon, the distance is zero.
+         */
+        int Distance( SEG aSegment, int aSegmentWidth = 0 );
+
+        /**
+         * Function IsVertexInHole.
+         * Checks whether the aGlobalIndex-th vertex belongs to a hole.
+         * @param  aGlobalIdx is the index of the vertex.
+         * @return bool - true if the globally indexed aGlobalIdx-th vertex belongs to a hole.
+         */
+        bool IsVertexInHole( int aGlobalIdx );
+
+        /**
+         * Function IsVertexInHole.
+         * Checks whether the aGlobalIndex-th vertex belongs to a hole.
+         * @param  aGlobalIdx is the index of the vertex.
+         * @return bool - true if the globally indexed aGlobalIdx-th vertex belongs to a hole.
+         */
+        bool GetVertexContourIndex( int aGlobalIdx );
 
     private:
 

@@ -683,22 +683,12 @@ private:
      * connecting "holes" with external main outline.  In complex cases an outline
      * described by m_Poly can have many filled areas
      */
-    SHAPE_POLY_SET m_FilledPolysList;
+    SHAPE_POLY_SET        m_FilledPolysList;
 
-    /**
-     * Zone hatch style
-     */
-    HATCH_STYLE    m_hatchStyle;
-
-    /**
-     * For DIAGONAL_EDGE hatched outlines, basic distance between 2 hatch lines
-     */
-    int                 m_hatchPitch;
-
-    /**
-     * Hatch lines
-     */
-    std::vector<SEG> m_HatchLines;
+    LAYER_NUM             m_layer;          // layer to draw on
+    HATCH_STYLE           m_hatchStyle;     // hatch style, see enum above
+    int                   m_hatchPitch;     // for DIAGONAL_EDGE, distance between 2 hatch lines
+    std::vector<SEG>      m_HatchLines;     // hatch lines
 };
 
 
