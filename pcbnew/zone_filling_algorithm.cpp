@@ -75,11 +75,13 @@ bool ZONE_CONTAINER::BuildFilledSolidAreasPolygons( BOARD* aPcb, SHAPE_POLY_SET*
     switch( m_cornerSmoothingType )
     {
     case ZONE_SETTINGS::SMOOTHING_CHAMFER:
-        m_smoothedPoly = m_Poly->Chamfer( m_cornerRadius );
+        m_smoothedPoly = new SHAPE_POLY_SET();
+        *m_smoothedPoly = m_Poly->Chamfer( m_cornerRadius );
         break;
 
     case ZONE_SETTINGS::SMOOTHING_FILLET:
-        m_smoothedPoly = m_Poly->Fillet( m_cornerRadius, m_ArcToSegmentsCount );
+        m_smoothedPoly = new SHAPE_POLY_SET();
+        *m_smoothedPoly = m_Poly->Fillet( m_cornerRadius, m_ArcToSegmentsCount );
         break;
 
     default:
@@ -88,7 +90,8 @@ bool ZONE_CONTAINER::BuildFilledSolidAreasPolygons( BOARD* aPcb, SHAPE_POLY_SET*
         // We can avoid issues by creating a very small chamfer which remove acute angles,
         // or left it without chamfer and use only CPOLYGONS_LIST::InflateOutline to create
         // clearance areas
-        m_smoothedPoly = m_Poly->Chamfer( Millimeter2iu( 0.0 ) );
+        m_smoothedPoly = new SHAPE_POLY_SET();
+        *m_smoothedPoly = m_Poly->Chamfer( Millimeter2iu( 0.0 ) );
         break;
     }
 
