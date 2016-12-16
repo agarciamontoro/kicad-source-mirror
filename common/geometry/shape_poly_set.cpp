@@ -1006,10 +1006,15 @@ int SHAPE_POLY_SET::RemoveNullSegments()
     VECTOR2I contourStart = *iterator;
     VECTOR2I segmentStart, segmentEnd;
 
+    VERTEX_INDEX indexStart;
+
     while( iterator )
     {
+        // Obtain first point and its index
         segmentStart = *iterator;
+        indexStart = iterator.GetIndex();
 
+        // Obtain last point
         if( iterator.IsEndContour() )
         {
             segmentEnd = contourStart;
@@ -1021,32 +1026,19 @@ int SHAPE_POLY_SET::RemoveNullSegments()
         }
         else
         {
-
             // Advance
             iterator++;
 
             segmentEnd = *iterator;
         }
 
-        // Compute distance from segment to point
-        SEG segment( segmentStart, segmentEnd );
-        int distance = segment.LineDistance( aPoint );
-
-        // Check for collisions
-        if(distance <= aClearance)
+        // Remove segment start if both points are equal
+        if( segmentStart == segmentEnd )
         {
-            collision = true;
-
-            // Update aClearance to look for closer edges
-            aClearance = distance;
-
-            // Store the indices that identify the vertex
-            aClosestVertex.m_polygon = iterator.m_currentPolygon;
-            aClosestVertex.m_contour = iterator.m_currentContour;
-            aClosestVertex.m_vertex = iterator.m_currentVertex;
+            RemoveVertex( indexStart );
+            removed++;
         }
     }
-
 
     return removed;
 }
@@ -1182,6 +1174,22 @@ bool SHAPE_POLY_SET::Contains( const VECTOR2I& aP, int aSubpolyIndex ) const
 
     return false;
 
+}
+
+
+void SHAPE_POLY_SET::RemoveVertex( int aGlobalIndex )
+{
+    VERTEX_INDEX index;
+
+    GetRelativeIndices( aGlobalIndex, &index );
+
+    RemoveVertex( index );
+}
+
+
+void SHAPE_POLY_SET::RemoveVertex( VERTEX_INDEX aIndex )
+{
+    m_polys[aIndex.m_polygon][aIndex.m_contour].Remove( aIndex.m_vertex );
 }
 
 
