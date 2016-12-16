@@ -113,7 +113,7 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
 {
     BOARD_CONNECTED_ITEM::operator=( aOther );
 
-    // Replace the outlines for aOther outilnes.
+    // Replace the outlines for aOther outlines.
     delete m_Poly;
     m_Poly = (SHAPE_POLY_SET*) aOther.Clone();
 
@@ -139,10 +139,8 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
 ZONE_CONTAINER::~ZONE_CONTAINER()
 {
     delete m_Poly;
-    m_Poly = NULL;
-
+    delete m_smoothedPoly;
     delete m_CornerSelection;
-    m_CornerSelection = nullptr;
 }
 
 

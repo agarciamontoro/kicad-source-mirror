@@ -646,6 +646,23 @@ class SHAPE_POLY_SET : public SHAPE
         POLYGON FilletPolygon( unsigned int aRadius, unsigned int aSegments, int aIndex = 0 );
 
         /**
+         * Function Chamfer
+         * Returns a chamfered version of the polygon set.
+         * @param aDistance is the chamfering distance.
+         * @return A SHAPE_POLY_SET object containing the chamfered version of this set.
+         */
+        SHAPE_POLY_SET Chamfer(  int aDistance );
+
+        /**
+         * Function Fillet
+         * Returns a filleted version of the polygon set.
+         * @param aRadius is the fillet radius.
+         * @param aSegments is the number of segments / fillet.
+         * @return A SHAPE_POLY_SET object containing the filleted version of this set.
+         */
+        SHAPE_POLY_SET Fillet(  int aRadius, int aSegments );
+
+        /**
          * Function DistanceToPolygon
          * Computes the minimum distance between the aIndex-th polygon and aPoint.
          * @param  aPoint is the point whose distance to the aIndex-th polygon has to be measured.
