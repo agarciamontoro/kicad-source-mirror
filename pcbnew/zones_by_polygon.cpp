@@ -944,7 +944,7 @@ void PCB_EDIT_FRAME::Delete_Zone_Contour( wxDC* DC, ZONE_CONTAINER* aZone )
     // Remove current filling:
     aZone->UnFill();
 
-    if( ncont == 0 )    // This is the main outline: remove all
+    if( indices.m_contour == 0 )    // This is the main outline: remove all
     {
         SaveCopyInUndoList( aZone, UR_DELETED );
         GetBoard()->Remove( aZone );

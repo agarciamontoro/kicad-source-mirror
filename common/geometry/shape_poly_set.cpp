@@ -1484,6 +1484,28 @@ bool SHAPE_POLY_SET::IsVertexInHole( int aGlobalIdx )
 }
 
 
+SHAPE_POLY_SET SHAPE_POLY_SET::Chamfer(  int aDistance )
+{
+    SHAPE_POLY_SET chamfered;
+
+    for (unsigned int polygonIdx = 0; polygonIdx < m_polys.size(); polygonIdx++)
+        chamfered.m_polys.push_back( ChamferPolygon( aDistance, polygonIdx ) );
+
+    return chamfered;
+}
+
+
+SHAPE_POLY_SET SHAPE_POLY_SET::Fillet(  int aRadius, int aSegments )
+{
+    SHAPE_POLY_SET filleted;
+
+    for (size_t polygonIdx = 0; polygonIdx < m_polys.size(); polygonIdx++)
+        filleted.m_polys.push_back( FilletPolygon( aRadius, aSegments, polygonIdx ) );
+
+    return filleted;
+}
+
+
 SHAPE_POLY_SET::POLYGON SHAPE_POLY_SET::chamferFilletPolygon( CORNER_MODE aMode,
                                                               unsigned int aDistance,
                                                               int aIndex,
