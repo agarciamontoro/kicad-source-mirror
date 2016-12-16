@@ -296,31 +296,26 @@ bool BOARD::CombineAreas( PICKED_ITEMS_LIST* aDeletedList, ZONE_CONTAINER* area_
         return false;
     }
 
-    SHAPE_POLY_SET mergedOutlines = ConvertPolyListToPolySet( area_ref->Outline()->m_CornersList );
-    SHAPE_POLY_SET areaToMergePoly = ConvertPolyListToPolySet( area_to_combine->Outline()->m_CornersList );
-
-    mergedOutlines.BooleanAdd( areaToMergePoly, SHAPE_POLY_SET::PM_FAST  );
-    mergedOutlines.Simplify( SHAPE_POLY_SET::PM_FAST );
+    area_ref->Outline()->BooleanAdd( area_to_combine->Outline(), SHAPE_POLY_SET::PM_FAST  );
+    area_ref->Outline()->Simplify( SHAPE_POLY_SET::PM_FAST );
 
     // We should have one polygon with hole
     // We can have 2 polygons with hole, if the 2 initial polygons have only one common corner
     // and therefore cannot be merged (they are dectected as intersecting)
     // but we should never have more than 2 polys
-    if( mergedOutlines.OutlineCount() > 2 )
+    if( area_ref->Outline()->OutlineCount() > 2 )
     {
         wxLogMessage(wxT("BOARD::CombineAreas error: more than 2 polys after merging") );
         return false;
     }
 
-    if( mergedOutlines.OutlineCount() > 1 )
+    if( area_ref->Outline()->OutlineCount() > 1 )
         return false;
-
-    area_ref->Outline()->m_CornersList = ConvertPolySetToPolyList( mergedOutlines );
 
     RemoveArea( aDeletedList, area_to_combine );
 
     area_ref->SetLocalFlags( 1 );
-    area_ref->Outline()->Hatch();
+    area_ref->Hatch();
 
     return true;
 }
@@ -385,7 +380,7 @@ int BOARD::Test_Drc_Areas_Outlines_To_Areas_Outlines( ZONE_CONTAINER* aArea_To_E
             {
                 VECTOR2I currentVertex = refSmoothedPoly->Vertex( ic );
 
-                if( testSmoothedPoly->Contains( currentVeretx ) )
+                if( testSmoothedPoly->Contains( currentVertex ) )
                 {
                     // COPPERAREA_COPPERAREA error: copper area ref corner inside copper area
                     if( aCreate_Markers )
@@ -434,7 +429,7 @@ int BOARD::Test_Drc_Areas_Outlines_To_Areas_Outlines( ZONE_CONTAINER* aArea_To_E
 
 
             // Define an iterator to visit all edges in the test polygon.
-            ITERATOR testIterator = testSmoothedPoly->IterateWithHoles();
+            SHAPE_POLY_SET::ITERATOR testIterator = testSmoothedPoly->IterateWithHoles();
 
             // Define variables to hold the segments vertices and to save the contour start point.
             VECTOR2I testContourStart = *testIterator;
@@ -468,7 +463,7 @@ int BOARD::Test_Drc_Areas_Outlines_To_Areas_Outlines( ZONE_CONTAINER* aArea_To_E
                 SEG testSegment( testSegmentStart, testSegmentEnd );
 
                 // Define an iterator to visit deges on ref polygon.
-                ITERATOR refIterator = refSmoothedPoly->IterateWithHoles();
+                SHAPE_POLY_SET::ITERATOR refIterator = refSmoothedPoly->IterateWithHoles();
 
                 // Define variables to hold the segments vertices and to save the contour start point.
                 VECTOR2I refContourStart = *refIterator;
