@@ -170,6 +170,17 @@ class SHAPE_POLY_SET : public SHAPE
                 return &Get();
             }
 
+            VERTEX_INDEX GetIndex()
+            {
+                VERTEX_INDEX index;
+
+                index.m_polygon = m_currentPolygon;
+                index.m_contour = m_currentContour;
+                index.m_vertex = m_currentVertex;
+
+                return index;
+            }
+
 
         private:
             friend class SHAPE_POLY_SET;
@@ -575,14 +586,19 @@ class SHAPE_POLY_SET : public SHAPE
             return m_polys.size() == 0;
         }
 
-        void RemoveVertex( int aGlobalIndex )
-        {
-            VERTEX_INDEX index;
+        /**
+         * Function RemoveVertex
+         * Deletes the aGlobalIndex-th vertex.
+         * @param aGlobalIndex is the global index of the to-be-removed vertex.
+         */
+        void RemoveVertex( int aGlobalIndex );
 
-            GetRelativeIndices( aGlobalIndex, &index );
-
-            m_polys[index.m_polygon][index.m_contour].Remove(index.m_vertex);
-        }
+        /**
+         * Function RemoveVertex
+         * Deletes the vertex indexed by aIndex (index of polygon, contour and vertex).
+         * @param aindex is the set of relative indices of the to-be-removed vertex.
+         */
+        void RemoveVertex( VERTEX_INDEX aRelativeIndices );
 
         ///> Removes all outlines & holes (clears) the polygon set.
         void RemoveAllContours();
