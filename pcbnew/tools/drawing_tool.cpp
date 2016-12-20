@@ -1183,7 +1183,6 @@ int DRAWING_TOOL::drawZone( bool aKeepout )
                     if( direction45 )
                         zone->AppendCorner( cursorPos == origin ? line45.GetStart() : line45.GetEnd() );
 
-                    zone->Outline()->CloseLastContour();
                     zone->Outline()->RemoveNullSegments();
 
                     if( !aKeepout )
@@ -1250,10 +1249,11 @@ int DRAWING_TOOL::drawZone( bool aKeepout )
                     zoneInfo.ExportSetting( *zone );
                     m_frame->GetGalCanvas()->SetTopLayer( zoneInfo.m_CurrentZone_Layer );
 
+                    zone->SetLayer( zoneInfo.m_CurrentZone_Layer );
+
                     // Add the first point
-                    zone->Outline()->Start( zoneInfo.m_CurrentZone_Layer,
-                                            cursorPos.x, cursorPos.y,
-                                            zone->GetHatchStyle() );
+                    zone->AppendCorner( cursorPos );
+
                     origin = cursorPos;
 
                     // Helper line represents the currently drawn line of the zone polygon
