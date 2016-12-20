@@ -119,9 +119,9 @@ public:
                 const SHAPE_POLY_SET* outline;
                 outline = static_cast<const ZONE_CONTAINER*>( aItem )->Outline();
 
-                int cornersCount = outline->GetCornersCount();
+                int cornersCount = outline->TotalVertices();
 
-                SHAPE_POLY_SET::ITERATOR iterator = outline.IterateWithHoles();
+                SHAPE_POLY_SET::CONST_ITERATOR iterator = outline->CIterateWithHoles();
 
                 while( iterator )
                 {
@@ -602,7 +602,7 @@ void POINT_EDITOR::updatePoints()
         else
         {
             for( int i = 0; i < outline->TotalVertices(); ++i )
-                m_editPoints->Point( i ).SetPosition( outline->Vertex( i ) );
+                m_editPoints->Point( i ).SetPosition( outline->CVertex( i ) );
         }
 
         break;
@@ -743,7 +743,7 @@ void POINT_EDITOR::addCorner( const VECTOR2I& aBreakPoint )
         SEG side( outline->Vertex( nearestIdx ), outline->Vertex( nextNearestIdx ) );
         unsigned int nearestDist = side.Distance( aBreakPoint );
 
-        for( int i = 0; i < outline->TotalVertices()() - 1; ++i )
+        for( int i = 0; i < outline->TotalVertices() - 1; ++i )
         {
             side = SEG( VECTOR2I( outline->Vertex( i ) ), VECTOR2I( outline->Vertex( i + 1 ) ) );
 

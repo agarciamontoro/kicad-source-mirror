@@ -441,6 +441,24 @@ class SHAPE_POLY_SET : public SHAPE
             return CIterate( 0, OutlineCount() - 1, true );
         }
 
+        ITERATOR IterateFromVertexWithHoles( int aGlobalIdx )
+        {
+            // Build iterator
+            ITERATOR iter = IterateWithHoles();
+
+            // Get the relative indices of the globally indexed vertex
+            VERTEX_INDEX indices;
+
+            GetRelativeIndices( aGlobalIdx, &indices );
+
+            // Adjust where the iterator is pointing
+            iter.m_currentPolygon = indices.m_polygon;
+            iter.m_currentContour = indices.m_contour;
+            iter.m_currentVertex = indices.m_vertex;
+
+            return iter;
+        }
+
         /** operations on polygons use a aFastMode param
          * if aFastMode is PM_FAST (true) the result can be a weak polygon
          * if aFastMode is PM_STRICTLY_SIMPLE (false) (default) the result is (theorically) a strictly
