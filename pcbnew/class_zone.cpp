@@ -210,6 +210,7 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
     SHAPE_POLY_SET::ITERATOR iterator = m_Poly->Iterate();
 
     // Remember the first point of this contour
+
     wxPoint contour_first_point = (wxPoint) *iterator;
 
     // Iterate through all the corners of the outlines and build the segments to draw
@@ -755,7 +756,11 @@ void ZONE_CONTAINER::Rotate( const wxPoint& centre, double angle )
 
     for( SHAPE_POLY_SET::ITERATOR iterator = m_Poly->IterateWithHoles(); iterator; iterator++ )
     {
+<<<<<<< HEAD
         pos = (wxPoint) *iterator;
+=======
+        pos = *iterator;
+>>>>>>> b93e7cd894bda78483e49e8e8d67ac7ba0ae81ae
         RotatePoint( &pos, centre, angle );
         iterator->x = pos.x;
         iterator->y = pos.y;
@@ -900,7 +905,11 @@ void ZONE_CONTAINER::UnHatch()
 
 // Creates hatch lines inside the outline of the complex polygon
 // sort function used in ::Hatch to sort points by descending wxPoint.x values
+<<<<<<< HEAD
 bool sortEndsByDescendingX( const VECTOR2I& ref, const VECTOR2I& tst )
+=======
+bool sortEndsByDescendingX( const wxPoint& ref, const wxPoint& tst )
+>>>>>>> b93e7cd894bda78483e49e8e8d67ac7ba0ae81ae
 {
     return tst.x < ref.x;
 }
