@@ -230,11 +230,11 @@ void POINT_EDITOR::updateEditedPoint( const TOOL_EVENT& aEvent )
 
     if( aEvent.IsMotion() )
     {
-        point = m_editPoints->FindPoint( aEvent.Position(), getView() );
+        point = m_editPoints->FindPoint( aEvent.Position() );
     }
     else if( aEvent.IsDrag( BUT_LEFT ) )
     {
-        point = m_editPoints->FindPoint( aEvent.DragOrigin(), getView() );
+        point = m_editPoints->FindPoint( aEvent.DragOrigin() );
     }
 
     if( m_editedPoint != point )
@@ -253,7 +253,7 @@ int POINT_EDITOR::OnSelectionChange( const TOOL_EVENT& aEvent )
         KIGFX::VIEW_CONTROLS* controls = getViewControls();
         KIGFX::VIEW* view = getView();
         PCB_BASE_EDIT_FRAME* editFrame = getEditFrame<PCB_BASE_EDIT_FRAME>();
-        auto item = selection.Front();
+        EDA_ITEM* item = selection.items.GetPickedItem( 0 );
 
         m_editPoints = EDIT_POINTS_FACTORY::Make( item, getView()->GetGAL() );
 
@@ -299,7 +299,7 @@ int POINT_EDITOR::OnSelectionChange( const TOOL_EVENT& aEvent )
             {
                 if( !modified )
                 {
-                    commit.StageItems( selection, CHT_MODIFY );
+                    commit.Stage( selection.items, UR_CHANGED );
 
                     controls->ForceCursorPosition( false );
                     m_original = *m_editedPoint;    // Save the original position
@@ -623,7 +623,7 @@ void POINT_EDITOR::updatePoints()
         break;
     }
 
-    getView()->Update( m_editPoints.get() );
+    m_editPoints->ViewUpdate();
 }
 
 
@@ -853,7 +853,7 @@ bool POINT_EDITOR::addCornerCondition( const SELECTION& aSelection )
     if( aSelection.Size() != 1 )
         return false;
 
-    auto item = aSelection.Front();
+    BOARD_ITEM* item = aSelection.Item<BOARD_ITEM>( 0 );
 
     // Works only for zones and line segments
     return item->Type() == PCB_ZONE_AREA_T ||

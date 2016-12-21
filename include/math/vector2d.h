@@ -121,7 +121,7 @@ public:
      * implements the cast to wxPoint.
      * @return wxPoint - the vector casted to wxPoint.
      */
-    operator wxPoint() const
+    explicit operator wxPoint() const
     {
         return wxPoint(x, y);
     }

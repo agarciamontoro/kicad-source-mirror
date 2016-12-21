@@ -615,7 +615,7 @@ bool DRC::doEdgeZoneDrc( ZONE_CONTAINER* aArea, int aCornerIndex )
         if( area_to_test->Outline()->Contains( end ) )
         {
             // COPPERAREA_COPPERAREA error: corner inside copper area
-            m_currentMarker = fillMarker( aArea, end,
+            m_currentMarker = fillMarker( aArea, (wxPoint) end,
                                           COPPERAREA_INSIDE_COPPERAREA,
                                           m_currentMarker );
             return false;
