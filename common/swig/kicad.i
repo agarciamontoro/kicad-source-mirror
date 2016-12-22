@@ -124,9 +124,9 @@ principle should be easily implemented by adapting the current STL containers.
 // KiCad plugin handling
 %include "kicadplugins.i"
 
-// map SHAPE_POLY_SET:
-#include <../include/geometry/shape_poly_set.h>
-%include <../include/geometry/shape_poly_set.h>
+// map CPolyLine and classes used in CPolyLine:
+#include <../polygon/PolyLine.h>
+%include <../polygon/PolyLine.h>
 
 // ignore warning relative to operator = and operator ++:
 #pragma SWIG nowarn=362,383

@@ -340,12 +340,11 @@ void GRID_HELPER::computeAnchors( BOARD_ITEM* aItem, const VECTOR2I& aRefPos )
         case PCB_ZONE_AREA_T:
         {
             const SHAPE_POLY_SET* outline = static_cast<const ZONE_CONTAINER*>( aItem )->Outline();
-            int cornersCount = outline->GetCornersCount();
 
             SHAPE_LINE_CHAIN lc;
             lc.SetClosed( true );
 
-            for( SHAPE_POLY_SET::ITERATOR iter = outline->IterateWithHoles(); iter; iter++ )
+            for( SHAPE_POLY_SET::CONST_ITERATOR iter = outline->CIterateWithHoles(); iter; iter++ )
             {
                 addAnchor( *iter, CORNER, aItem );
                 lc.Append( *iter );

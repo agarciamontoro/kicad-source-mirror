@@ -198,9 +198,6 @@ class SHAPE_POLY_SET : public SHAPE
 
         SHAPE_POLY_SET();
 
-        SHAPE_POLY_SET( const POLYGON& aPolygon );
-
-
         /**
          * Copy constructor SHAPE_POLY_SET
          * Performs a deep copy of \p aOther into \p this.
@@ -730,14 +727,6 @@ class SHAPE_POLY_SET : public SHAPE
          * @return bool - true if the globally indexed aGlobalIdx-th vertex belongs to a hole.
          */
         bool IsVertexInHole( int aGlobalIdx );
-
-        /**
-         * Function IsVertexInHole.
-         * Checks whether the aGlobalIndex-th vertex belongs to a hole.
-         * @param  aGlobalIdx is the index of the vertex.
-         * @return bool - true if the globally indexed aGlobalIdx-th vertex belongs to a hole.
-         */
-        bool GetVertexContourIndex( int aGlobalIdx );
 
     private:
 

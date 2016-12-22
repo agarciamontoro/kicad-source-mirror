@@ -1249,7 +1249,7 @@ int DRAWING_TOOL::drawZone( bool aKeepout )
                     zone->SetLayer( zoneInfo.m_CurrentZone_Layer );
 
                     // Add the first point
-                    zone->AppendCorner( cursorPos );
+                    zone->AppendCorner( (wxPoint) cursorPos );
 
                     origin = cursorPos;
 
