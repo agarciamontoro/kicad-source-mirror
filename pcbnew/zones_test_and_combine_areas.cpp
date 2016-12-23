@@ -199,72 +199,19 @@ bool BOARD::TestAreaIntersection( ZONE_CONTAINER* area_ref, ZONE_CONTAINER* area
     if( ! b1.Intersects( b2 ) )
         return false;
 
-    SHAPE_POLY_SET::ITERATOR iterator1, iterator2;
-    VECTOR2I segmentStart, segmentEnd, contourStart;
+    SHAPE_POLY_SET::SEGMENT_ITERATOR segIterator1, segIterator2;
 
-    iterator1 = poly1->IterateWithHoles();
-
-    contourStart = *iterator1;
+    segIterator1 = poly1->IterateWithHoles();
 
     // Iterate through all the vertices
-    while( iterator1 )
+    for( segIterator1 = poly1->IterateWithHoles(); segIterator1; segIterator1++ )
     {
-        // Get segment start
-        segmentStart = *iterator1;
-
-        // Get segment end
-        if( iterator1.IsEndContour() )
-        {
-            segmentEnd = contourStart;
-
-            // Advance
-            iterator1++;
-
-            contourStart = *iterator1;
-        }
-        else
-        {
-            // Advance
-            iterator1++;
-
-            segmentEnd = *iterator1;
-        }
-
         // Build segment
-        SEG firstSegment( segmentStart, segmentEnd );
+        SEG firstSegment = *segIterator1;
 
-        iterator2 = poly2->IterateWithHoles();
-
-        // Define variables to hold the segments vertices and to save the contour start point.
-        VECTOR2I innerContourStart = *iterator2;
-        VECTOR2I innerSegmentStart, innerSegmentEnd;
-
-        // Iterate through all remaining segments
-        while( iterator2 )
-        {
-            // Get segment start
-            innerSegmentStart = *iterator2;
-
-            // Get segment end
-            if( iterator2.IsEndContour() )
-            {
-                innerSegmentEnd = innerContourStart;
-
-                // Advance
-                iterator2++;
-
-                innerContourStart = *iterator2;
-            }
-            else
-            {
-                // Advance
-                iterator2++;
-
-                innerSegmentEnd = *iterator2;
-            }
-
+        for( segIterator2 = poly2->IterateWithHoles(); segIterator2; segIterator2++ )
             // Build second segment
-            SEG secondSegment( innerSegmentStart, innerSegmentEnd );
+            SEG secondSegment = *segIterator2;
 
             // Check whether the two segments built collide
             if( firstSegment.Collide( secondSegment, 0 ) )
@@ -274,15 +221,15 @@ bool BOARD::TestAreaIntersection( ZONE_CONTAINER* area_ref, ZONE_CONTAINER* area
 
     // If a contour is inside an other contour, no segments intersects, but the zones
     // can be combined if a corner is inside an outline (only one corner is enought)
-    for( iterator2 = poly2->IterateWithHoles(); iterator2; iterator2++ )
+    for( SHAPE_POLY_SET::ITERATOR iter = poly2->IterateWithHoles(); iter; iter++ )
     {
-        if( poly1->Contains( *iterator2 ) )
+        if( poly1->Contains( *iter ) )
             return true;
     }
 
-    for( iterator1 = poly1->IterateWithHoles(); iterator1; iterator1++ )
+    for( SHAPE_POLY_SET::ITERATOR iter = poly1->IterateWithHoles(); iter; iter++ )
     {
-        if( poly2->Contains( *iterator1 ) )
+        if( poly2->Contains( *iter ) )
             return true;
     }
 

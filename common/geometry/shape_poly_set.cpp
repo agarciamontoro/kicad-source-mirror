@@ -275,73 +275,19 @@ bool SHAPE_POLY_SET::IsPolygonSelfIntersecting( int aPolygonIndex )
     // Get polygon
     const POLYGON poly = CPolygon( aPolygonIndex );
 
-    // Define an iterator to visit all edges in the polygon.
-    ITERATOR iterator = IterateWithHoles( aPolygonIndex );
+    SEGMENT_ITERATOR iterator = IterateSegmentsWithHoles( aPolygonIndex );
+    SEGMENT_ITERATOR innerIterator;
 
-    // Define variables to hold the segments vertices and to save the contour start point.
-    VECTOR2I contourStart = *iterator;
-    VECTOR2I segmentStart, segmentEnd;
-
-    // Iterate through all the holes
-    while( iterator )
+    for( iterator = IterateSegmentsWithHoles( aPolygonIndex ); iterator; iterator++ )
     {
-        // Get segment start
-        segmentStart = *iterator;
+        SEG firstSegment = *iterator;
 
-        // Get segment end
-        if( iterator.IsEndContour() )
-        {
-            segmentEnd = contourStart;
+        // Iterate through all remaining segments.
+        innerIterator = iterator;
 
-            // Advance
-            iterator++;
-
-            contourStart = *iterator;
-        }
-        else
-        {
-            // Advance
-            iterator++;
-
-            segmentEnd = *iterator;
-        }
-
-        // Build segment
-        SEG firstSegment( segmentStart, segmentEnd );
-
-        // Define an iterator to visit all remaning edges.
-        SHAPE_POLY_SET::ITERATOR innerIterator = iterator;
-
-        // Define variables to hold the segments vertices and to save the contour start point.
-        VECTOR2I innerContourStart = *innerIterator;
-        VECTOR2I innerSegmentStart, innerSegmentEnd;
-
-        // Iterate through all remaining segments
-        while( innerIterator )
-        {
-            // Get segment start
-            innerSegmentStart = *innerIterator;
-
-            // Get segment end
-            if( innerIterator.IsEndContour() )
-            {
-                innerSegmentEnd = innerContourStart;
-
-                // Advance
-                innerIterator++;
-
-                innerContourStart = *innerIterator;
-            }
-            else
-            {
-                // Advance
-                innerIterator++;
-
-                innerSegmentEnd = *innerIterator;
-            }
-
-            // Build second segment
-            SEG secondSegment( innerSegmentStart, innerSegmentEnd );
+        // Start in the next segment, we don't want to check collision between a segment and itself
+        for(innerIterator++; innerIterator; innerIterator++) {
+            SEG secondSegment = *innerIterator;
 
             // Check whether the two segments built collide
             if( firstSegment.Collide( secondSegment, 0 ) )
@@ -1100,43 +1046,18 @@ bool SHAPE_POLY_SET::CollideVertex( const VECTOR2I& aPoint, SHAPE_POLY_SET::VERT
 }
 
 
-bool SHAPE_POLY_SET::CollideEdge( const VECTOR2I& aPoint, SHAPE_POLY_SET::VERTEX_INDEX& aClosestVertex,
-                                 int aClearance )
+bool SHAPE_POLY_SET::CollideEdge( const VECTOR2I& aPoint,
+                                  SHAPE_POLY_SET::VERTEX_INDEX& aClosestVertex, int aClearance )
 {
     // Shows whether there was a collision
     bool collision = false;
 
-    ITERATOR iterator = IterateWithHoles();
+    SEGMENT_ITERATOR iterator;
 
-    VECTOR2I contourStart = *iterator;
-    VECTOR2I segmentStart, segmentEnd;
-
-    while( iterator )
+    for (iterator = IterateSegmentsWithHoles(); iterator; iterator++)
     {
-        // Build segment
-        segmentStart = *iterator;
-
-        if( iterator.IsEndContour() )
-        {
-            segmentEnd = contourStart;
-
-            // Advance
-            iterator++;
-
-            contourStart = *iterator;
-        }
-        else
-        {
-
-            // Advance
-            iterator++;
-
-            segmentEnd = *iterator;
-        }
-
-        // Compute distance from segment to point
-        SEG segment( segmentStart, segmentEnd );
-        int distance = segment.LineDistance( aPoint );
+        SEG currentSegment = *iterator;
+        int distance = currentSegment.LineDistance( aPoint );
 
         // Check for collisions
         if(distance <= aClearance)
@@ -1147,9 +1068,7 @@ bool SHAPE_POLY_SET::CollideEdge( const VECTOR2I& aPoint, SHAPE_POLY_SET::VERTEX
             aClearance = distance;
 
             // Store the indices that identify the vertex
-            aClosestVertex.m_polygon = iterator.m_currentPolygon;
-            aClosestVertex.m_contour = iterator.m_currentContour;
-            aClosestVertex.m_vertex = iterator.m_currentVertex;
+            aClosestVertex = iterator.GetIndex();
         }
     }
 
@@ -1330,41 +1249,14 @@ int SHAPE_POLY_SET::DistanceToPolygon( VECTOR2I aPoint, int aPolygonIndex )
     if( containsSingle( aPoint, aPolygonIndex ) )
         return 0;
 
-    int minDistance = INT_MAX;
+    SEGMENT_ITERATOR iterator = IterateSegmentsWithHoles( aPolygonIndex );
 
-    // Define an iterator to visit all edges in the polygon.
-    ITERATOR iterator = IterateWithHoles( aPolygonIndex );
+    SEG polygonEdge = *iterator;
+    int minDistance = polygonEdge.Distance( aPoint );
 
-    // Define variables to hold the segments vertices and to save the contour start point.
-    VECTOR2I contourStart = *iterator;
-    VECTOR2I segmentStart, segmentEnd;
-
-    // Iterate through all the holes while the distance is not null
-    while( iterator && minDistance > 0 )
+    for( iterator++; iterator && minDistance > 0; iterator++ )
     {
-        // Get segment start
-        segmentStart = *iterator;
-
-        // Get segment end
-        if( iterator.IsEndContour() )
-        {
-            segmentEnd = contourStart;
-
-            // Advance
-            iterator++;
-
-            contourStart = *iterator;
-        }
-        else
-        {
-            // Advance
-            iterator++;
-
-            segmentEnd = *iterator;
-        }
-
-        // Build segment
-        SEG polygonEdge( segmentStart, segmentEnd );
+        polygonEdge = *iterator;
 
         int currentDistance = polygonEdge.Distance( aPoint );
 
@@ -1385,41 +1277,14 @@ int SHAPE_POLY_SET::DistanceToPolygon( SEG aSegment, int aPolygonIndex, int aSeg
     if( containsSingle( aSegment.A, aPolygonIndex ) )
         return 0;
 
-    int minDistance = INT_MAX;
+    SEGMENT_ITERATOR iterator = IterateSegmentsWithHoles( aPolygonIndex );
 
-    // Define an iterator to visit all edges in the polygon.
-    ITERATOR iterator = IterateWithHoles( aPolygonIndex );
+    SEG polygonEdge = *iterator;
+    int minDistance = polygonEdge.Distance( aSegment );
 
-    // Define variables to hold the segments vertices and to save the contour start point.
-    VECTOR2I contourStart = *iterator;
-    VECTOR2I segmentStart, segmentEnd;
-
-    // Iterate through all the holes while the distance is not null
-    while( iterator && minDistance > 0 )
+    for( iterator++; iterator && minDistance > 0; iterator++ )
     {
-        // Get segment start
-        segmentStart = *iterator;
-
-        // Get segment end
-        if( iterator.IsEndContour() )
-        {
-            segmentEnd = contourStart;
-
-            // Advance
-            iterator++;
-
-            contourStart = *iterator;
-        }
-        else
-        {
-            // Advance
-            iterator++;
-
-            segmentEnd = *iterator;
-        }
-
-        // Build segment
-        SEG polygonEdge( segmentStart, segmentEnd );
+        polygonEdge = *iterator;
 
         int currentDistance = polygonEdge.Distance( aSegment );
 

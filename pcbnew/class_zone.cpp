@@ -991,41 +991,19 @@ void ZONE_CONTAINER::Hatch()
         // we skip this line (should not occur)
         pointbuffer.clear();
 
-        SHAPE_POLY_SET::ITERATOR iterator = m_Poly->IterateWithHoles();
-
-        VECTOR2I contourStart = *iterator;
-        VECTOR2I segmentStart, segmentEnd;
+        SHAPE_POLY_SET::SEGMENT_ITERATOR iterator;
 
         // Iterate through all vertices
-        while( iterator )
+        for( iterator = m_Poly->IterateSegmentsWithHoles(); iterator; iterator++ )
         {
             double  x, y, x2, y2;
             int     ok;
 
-            // Build segment
-            segmentStart = *iterator;
-
-            if( iterator.IsEndContour() )
-            {
-                segmentEnd = contourStart;
-
-                // Advance
-                iterator++;
-
-                contourStart = *iterator;
-            }
-            else
-            {
-
-                // Advance
-                iterator++;
-
-                segmentEnd = *iterator;
-            }
+            SEG segment = *iterator;
 
             ok = FindLineSegmentIntersection( a, slope,
-                                              segmentStart.x, segmentStart.y,
-                                              segmentEnd.x, segmentEnd.y,
+                                              segment.A.x, segment.A.y,
+                                              segment.B.x, segment.B.y,
                                               &x, &y, &x2, &y2 );
 
               if( ok )

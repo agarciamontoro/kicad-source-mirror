@@ -121,9 +121,9 @@ public:
 
                 int cornersCount = outline->TotalVertices();
 
-                SHAPE_POLY_SET::CONST_ITERATOR iterator = outline->CIterateWithHoles();
+                SHAPE_POLY_SET::CONST_ITERATOR iterator;
 
-                while( iterator )
+                for( iterator = outline->CIterateWithHoles(); iterator; iterator++ )
                 {
                     points->AddPoint( *iterator );
 

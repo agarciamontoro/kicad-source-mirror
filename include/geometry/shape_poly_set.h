@@ -193,8 +193,128 @@ class SHAPE_POLY_SET : public SHAPE
             bool m_iterateHoles;
         };
 
+        /**
+         * Class ITERATOR_TEMPLATE
+         *
+         * Base class for iterating over all vertices in a given SHAPE_POLY_SET.
+         *
+         * Let us define the terms used on this class to clarify comments and methods names:
+         *      - Polygon: each polygon in the set.
+         *      - Outline: first polyline in each polygon; represents its outer contour.
+         *      - Hole: second and following polylines in the polygon.
+         *      - Contour: each polyline of each polygon in the set, whether or not it is an
+         *      outline or a hole.
+         *      - Vertex (or corner): each one of the points that define a contour.
+         */
+        template <class T>
+        class SEGMENT_ITERATOR_TEMPLATE
+        {
+        public:
+            /**
+             * Function IsLastOutline.
+             * @return True if the current outline is the last one.
+             */
+            bool IsLastPolygon() const
+            {
+                return m_currentPolygon == m_lastPolygon;
+            }
+
+            operator bool() const
+            {
+                return m_currentPolygon <= m_lastPolygon;
+            }
+
+            /**
+             * Function Advance.
+             *
+             * Advance the indices of the current vertex/outline/contour, checking whether the
+             * vertices in the holes have to be iterated through
+             */
+            void Advance()
+            {
+                // Advance vertex index
+                m_currentSegment++;
+
+                // Check whether the user wants to iterate through the vertices of the holes
+                // and behave accordingly
+                if( m_iterateHoles )
+                {
+                    // If the last vertex of the contour was reached, advance the contour index
+                    if( m_currentSegment >= m_poly->CPolygon( m_currentPolygon )[m_currentContour].SegmentCount() )
+                    {
+                        m_currentSegment = 0;
+                        m_currentContour++;
+
+                        // If the last contour of the current polygon was reached, advance the
+                        // outline index
+                        int totalContours = m_poly->CPolygon( m_currentPolygon ).size();
+
+                        if( m_currentContour >= totalContours )
+                        {
+                            m_currentContour = 0;
+                            m_currentPolygon++;
+                        }
+                    }
+                }
+                else
+                {
+                    // If the last vertex of the outline was reached, advance to the following polygon
+                    if( m_currentSegment >= m_poly->CPolygon( m_currentPolygon )[0].SegmentCount() )
+                    {
+                        m_currentSegment = 0;
+                        m_currentPolygon++;
+                    }
+                }
+            }
+
+            void operator++( int dummy )
+            {
+                Advance();
+            }
+
+            void operator++()
+            {
+                Advance();
+            }
+
+            T Get()
+            {
+                return m_poly->Polygon(m_currentPolygon)[m_currentContour].Segment(m_currentSegment);
+            }
+
+            T operator*()
+            {
+                return Get();
+            }
+
+            VERTEX_INDEX GetIndex()
+            {
+                VERTEX_INDEX index;
+
+                index.m_polygon = m_currentPolygon;
+                index.m_contour = m_currentContour;
+                index.m_vertex = m_currentSegment;
+
+                return index;
+            }
+
+
+        private:
+            friend class SHAPE_POLY_SET;
+
+            SHAPE_POLY_SET* m_poly;
+            int m_currentPolygon;
+            int m_currentContour;
+            int m_currentSegment;
+            int m_lastPolygon;
+            bool m_iterateHoles;
+        };
+
         typedef ITERATOR_TEMPLATE<VECTOR2I> ITERATOR;
         typedef ITERATOR_TEMPLATE<const VECTOR2I> CONST_ITERATOR;
+
+        typedef SEGMENT_ITERATOR_TEMPLATE<SEG> SEGMENT_ITERATOR;
+        typedef SEGMENT_ITERATOR_TEMPLATE<const SEG> CONST_SEGMENT_ITERATOR;
 
         SHAPE_POLY_SET();
 
@@ -454,6 +574,33 @@ class SHAPE_POLY_SET : public SHAPE
             iter.m_currentVertex = indices.m_vertex;
 
             return iter;
+        }
+
+        ///> Returns an iterator object, for iterating between aFirst and aLast outline, with or
+        /// without holes (default: without)
+        SEGMENT_ITERATOR IterateSegments( int aFirst, int aLast, bool aIterateHoles = false )
+        {
+            SEGMENT_ITERATOR iter;
+
+            iter.m_poly = this;
+            iter.m_currentPolygon = aFirst;
+            iter.m_lastPolygon = aLast < 0 ? OutlineCount() - 1 : aLast;
+            iter.m_currentSegment = 0;
+            iter.m_iterateHoles = aIterateHoles;
+
+            return iter;
+        }
+
+        ///> Returns an iterator object, for all outlines in the set (with holes)
+        SEGMENT_ITERATOR IterateSegmentsWithHoles()
+        {
+            return IterateSegments( 0, OutlineCount() - 1, true );
+        }
+
+        ///> Returns an iterator object, for all outlines in the set (with holes)
+        SEGMENT_ITERATOR IterateSegmentsWithHoles( int aOutline )
+        {
+            return IterateSegments( aOutline, aOutline, true );
         }
 
         /** operations on polygons use a aFastMode param
