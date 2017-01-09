@@ -396,7 +396,7 @@ int BOARD::Test_Drc_Areas_Outlines_To_Areas_Outlines( ZONE_CONTAINER* aArea_To_E
                 {
 
                     // Build second segment
-                    SEG refSegment = refIterator;
+                    SEG refSegment = *refIterator;
 
                     int x, y;
 
@@ -460,28 +460,6 @@ bool DRC::doEdgeZoneDrc( ZONE_CONTAINER* aArea, int aCornerIndex )
     // Obtain end
     VECTOR2I  end = *iterator;
 
-    // // Search the end point of the edge starting at aCornerIndex
-    // if( aArea->Outline()->m_CornersList[aCornerIndex].end_contour == false
-    //    && aCornerIndex < (aArea->GetNumCorners() - 1) )
-    // {
-    //     end = aArea->GetCornerPosition( aCornerIndex + 1 );
-    // }
-    // else    // aCornerIndex is the last corner of an outline.
-    //         // the corresponding end point of the segment is the first corner of the outline
-    // {
-    //     int ii = aCornerIndex - 1;
-    //     end = aArea->GetCornerPosition( ii );
-    //
-    //     while( ii >= 0 )
-    //     {
-    //         if( aArea->Outline()->m_CornersList[ii].end_contour )
-    //             break;
-    //
-    //         end = aArea->GetCornerPosition( ii );
-    //         ii--;
-    //     }
-    // }
-
     // iterate through all areas
     for( int ia2 = 0; ia2 < m_pcb->GetAreaCount(); ia2++ )
     {
@@ -527,41 +505,18 @@ bool DRC::doEdgeZoneDrc( ZONE_CONTAINER* aArea, int aCornerIndex )
         int ay2    = end.y;
 
         // Define an iterator to visit all edges in the polygon.
-        SHAPE_POLY_SET::ITERATOR iterator;
-        iterator = area_to_test->Outline()->IterateWithHoles();
-
-        // Define variables to hold the segments vertices and to save the contour start point.
-        VECTOR2I contourStart = *iterator;
-        VECTOR2I segmentStart, segmentEnd;
+        SHAPE_POLY_SET::SEGMENT_ITERATOR iterator;
+        iterator = area_to_test->Outline()->IterateSegmentsWithHoles();
 
         // Iterate through all the holes
-        while( iterator )
+        for( ; iterator; iterator++ )
         {
-            // Get segment start
-            segmentStart = *iterator;
+            SEG segment = *iterator;
 
-            // Get segment end
-            if( iterator.IsEndContour() )
-            {
-                segmentEnd = contourStart;
-
-                // Advance
-                iterator++;
-
-                contourStart = *iterator;
-            }
-            else
-            {
-                // Advance
-                iterator++;
-
-                segmentEnd = *iterator;
-            }
-
-            int bx1 = segmentStart.x;
-            int by1 = segmentStart.y;
-            int bx2 = segmentEnd.x;
-            int by2 = segmentEnd.y;
+            int bx1 = segment.A.x;
+            int by1 = segment.A.y;
+            int bx2 = segment.B.x;
+            int by2 = segment.B.y;
 
             int x, y;   // variables containing the intersecting point coordinates
             int d = GetClearanceBetweenSegments( bx1, by1, bx2, by2,
