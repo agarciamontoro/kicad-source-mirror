@@ -242,14 +242,14 @@ SHAPE_POLY_SET SHAPE_POLY_SET::Subset( int aFirstPolygon, int aLastPolygon )
 VECTOR2I& SHAPE_POLY_SET::Vertex( int index, int aOutline , int aHole )
 {
     if( aOutline < 0 )
-    aOutline += m_polys.size();
+        aOutline += m_polys.size();
 
     int idx;
 
     if( aHole < 0 )
-    idx = 0;
+        idx = 0;
     else
-    idx = aHole + 1;
+        idx = aHole + 1;
 
     assert( aOutline < (int)m_polys.size() );
     assert( idx < (int)m_polys[aOutline].size() );
