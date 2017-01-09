@@ -2363,7 +2363,6 @@ ZONE_CONTAINER* BOARD::InsertArea( int netcode, int iarea, LAYER_ID layer, int x
     else
         m_ZoneDescriptorList.push_back( new_area );
 
-    // new_area->Outline()->Start( layer, x, y, hatch );
     return new_area;
 }
 
@@ -2386,8 +2385,6 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
         // Normalize copied area and store resulting number of polygons
         int n_poly = pa->NormalizeAreaOutlines();
 
-        // curr_polygon->UnHatch();
-
         // If clipping has created some polygons, we must add these new copper areas.
         if( n_poly > 1 )
         {
@@ -2409,8 +2406,6 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
             }
         }
     }
-
-    // curr_polygon->Hatch();
 
     return true;
 }

@@ -116,7 +116,7 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
     delete m_Poly;
     m_Poly = (SHAPE_POLY_SET*) aOther.Clone();
 
-    m_CornerSelection  = NULL;        // for corner moving, corner index to drag or -1 if no selection
+    m_CornerSelection  = nullptr; // for corner moving, corner index to (null if no selection)
     m_ZoneClearance    = aOther.m_ZoneClearance;            // clearance value
     m_ZoneMinThickness = aOther.m_ZoneMinThickness;
     m_FillMode = aOther.m_FillMode;                         // filling mode (segments/polygons)
@@ -126,6 +126,7 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
     m_ThermalReliefCopperBridge = aOther.m_ThermalReliefCopperBridge;
     SetHatchStyle( aOther.GetHatchStyle() );
     SetHatchPitch( aOther.GetHatchPitch() );
+    m_HatchLines = aOther.m_HatchLines;     // copy vector <CSegment>
     m_FilledPolysList.RemoveAllContours();
     m_FilledPolysList.Append( aOther.m_FilledPolysList );
     m_FillSegmList.clear();
@@ -176,7 +177,7 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
     if( !DC )
         return;
 
-    wxPoint    seg_start, seg_end;
+    wxPoint     seg_start, seg_end;
     LAYER_ID    curr_layer = ( (PCB_SCREEN*) panel->GetScreen() )->m_Active_Layer;
     BOARD*      brd   = GetBoard();
 
@@ -205,38 +206,16 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
     std::vector<wxPoint> lines;
     lines.reserve( (GetNumCorners() * 2) + 2 );
 
-    // Object to iterate through the corners of the outlines
-    SHAPE_POLY_SET::ITERATOR iterator = m_Poly->Iterate();
+    // Object to iterate through the segments of the outline
+    SHAPE_POLY_SET::SEGMENT_ITERATOR iterator;
 
-    // Remember the first point of this contour
-
-    wxPoint contour_first_point = (wxPoint) *iterator;
-
-    // Iterate through all the corners of the outlines and build the segments to draw
-    while(iterator)
+    for( iterator = m_Poly->IterateSegments(); iterator; iterator++)
     {
-        // Get the first point of the current segment
-        seg_start = (wxPoint)*iterator + offset;
-
-        // Get the last point of the current segment, handling the case where the end of the
-        // contour is reached, when the last point of the segment is the first point of the
-        // contour
-        if( !iterator.IsEndContour() )
-        {
-            iterator++;
-            seg_end = (wxPoint)*iterator + offset;
-        }
-        else{
-            seg_end = contour_first_point + offset;
-
-            // Reassign first point of the contour to the next contour start
-            iterator++;
-            contour_first_point = (wxPoint) *iterator;
-        }
-
         // Create the segment
-        lines.push_back( seg_start );
-        lines.push_back( seg_end );
+        SEG segment = *iterator;
+
+        lines.push_back( (wxPoint) segment.A );
+        lines.push_back( (wxPoint) segment.B );
     }
 
     GRLineArray( panel->GetClipBox(), DC, lines, 0, color );
@@ -642,7 +621,7 @@ void ZONE_CONTAINER::GetMsgPanelInfo( std::vector< MSG_PANEL_ITEM >& aList )
 
     // Display Cutout instead of Outline for holes inside a zone
     // i.e. when num contour !=0
-    // Check whethers the selected corner is in a hole; i.e., in any contour but the first one.
+    // Check whether the selected corner is in a hole; i.e., in any contour but the first one.
     if( m_CornerSelection->m_contour > 0 )
         msg << wxT( " " ) << _( "(Cutout)" );
 
