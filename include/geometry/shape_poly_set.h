@@ -40,6 +40,14 @@
  * Represents a set of closed polygons. Polygons may be nonconvex, self-intersecting
  * and have holes. Provides boolean operations (using Clipper library as the backend).
  *
+ * Let us define the terms used on this class to clarify methods names and comments:
+ *      - Polygon: each polygon in the set.
+ *      - Outline: first polyline in each polygon; represents its outer contour.
+ *      - Hole: second and following polylines in the polygon.
+ *      - Contour: each polyline of each polygon in the set, whether or not it is an
+ *      outline or a hole.
+ *      - Vertex (or corner): each one of the points that define a contour.
+ *
  * TODO: add convex partitioning & spatial index
  */
 class SHAPE_POLY_SET : public SHAPE
@@ -51,28 +59,22 @@ class SHAPE_POLY_SET : public SHAPE
 
         /**
          * Struct VERTEX_INDEX
-         * Holds the necessary information to index a vertex on a SHAPE_POLY_SET object:
-         * the outline index, the hole index relative to the outline and the vertex index relative
-         * the hole.
+         *
+         * Structure to hold the necessary information in order to index a vertex on a
+         * SHAPE_POLY_SET object:
+         * the polygon index, the contour index relative to the polygon and the vertex index
+         * relative the contour.
          */
         typedef struct{
             int m_polygon;   /*!< aPolygon is the index of the polygon. */
-            int m_contour;      /*!< aContour is the index of the contour. */
-            int m_vertex;    /*!< aVertex is the index of the vertex. */
+            int m_contour;   /*!< aContour is the index of the contour relative to the polygon. */
+            int m_vertex;    /*!< aVertex is the index of the vertex relative to the contour. */
         } VERTEX_INDEX;
 
         /**
          * Class ITERATOR_TEMPLATE
          *
          * Base class for iterating over all vertices in a given SHAPE_POLY_SET.
-         *
-         * Let us define the terms used on this class to clarify comments and methods names:
-         *      - Polygon: each polygon in the set.
-         *      - Outline: first polyline in each polygon; represents its outer contour.
-         *      - Hole: second and following polylines in the polygon.
-         *      - Contour: each polyline of each polygon in the set, whether or not it is an
-         *      outline or a hole.
-         *      - Vertex (or corner): each one of the points that define a contour.
          */
         template <class T>
         class ITERATOR_TEMPLATE
@@ -196,15 +198,7 @@ class SHAPE_POLY_SET : public SHAPE
         /**
          * Class ITERATOR_TEMPLATE
          *
-         * Base class for iterating over all vertices in a given SHAPE_POLY_SET.
-         *
-         * Let us define the terms used on this class to clarify comments and methods names:
-         *      - Polygon: each polygon in the set.
-         *      - Outline: first polyline in each polygon; represents its outer contour.
-         *      - Hole: second and following polylines in the polygon.
-         *      - Contour: each polyline of each polygon in the set, whether or not it is an
-         *      outline or a hole.
-         *      - Vertex (or corner): each one of the points that define a contour.
+         * Base class for iterating over all segments in a given SHAPE_POLY_SET.
          */
         template <class T>
         class SEGMENT_ITERATOR_TEMPLATE
@@ -426,12 +420,7 @@ class SHAPE_POLY_SET : public SHAPE
         int VertexCount( int aOutline = -1, int aHole = -1 ) const;
 
         ///> Returns the number of holes in a given outline
-        int HoleCount( int aOutline ) const
-        {
-            if( (aOutline > (int)m_polys.size()) || (m_polys[aOutline].size() < 2) )
-                return 0;
-            return m_polys[aOutline].size() - 1;
-        }
+        int HoleCount( int aOutline ) const;
 
         ///> Returns the reference to aIndex-th outline in the set
         SHAPE_LINE_CHAIN& Outline( int aIndex )
@@ -439,19 +428,7 @@ class SHAPE_POLY_SET : public SHAPE
             return m_polys[aIndex][0];
         }
 
-        SHAPE_POLY_SET Subset( int aFirstPolygon, int aLastPolygon )
-        {
-            assert( aFirstPolygon >= 0 && aLastPolygon < OutlineCount() );
-
-            SHAPE_POLY_SET newPolySet;
-
-            for( int index = aFirstPolygon; index < aLastPolygon; index++ )
-            {
-                newPolySet.m_polys.push_back( Polygon( index ) );
-            }
-
-            return newPolySet;
-        }
+        SHAPE_POLY_SET Subset( int aFirstPolygon, int aLastPolygon );
 
         SHAPE_POLY_SET UnitSet( int aPolygonIndex )
         {
@@ -590,6 +567,19 @@ class SHAPE_POLY_SET : public SHAPE
 
             return iter;
         }
+
+        ///> Returns an iterator object, for iterating aPolygonIdx-th polygon edges
+        SEGMENT_ITERATOR IterateSegments( int aPolygonIdx )
+        {
+            return IterateSegments( aPolygonIdx, aPolygonIdx );
+        }
+
+        ///> Returns an iterator object, for all outlines in the set (no holes)
+        SEGMENT_ITERATOR IterateSegments()
+        {
+            return IterateSegments( 0, OutlineCount() - 1 );
+        }
+
 
         ///> Returns an iterator object, for all outlines in the set (with holes)
         SEGMENT_ITERATOR IterateSegmentsWithHoles()
