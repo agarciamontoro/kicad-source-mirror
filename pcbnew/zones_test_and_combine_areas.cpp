@@ -378,86 +378,39 @@ int BOARD::Test_Drc_Areas_Outlines_To_Areas_Outlines( ZONE_CONTAINER* aArea_To_E
 
 
             // Define an iterator to visit all edges in the test polygon.
-            SHAPE_POLY_SET::ITERATOR testIterator = testSmoothedPoly->IterateWithHoles();
+            SHAPE_POLY_SET::SEGMENT_ITERATOR testIterator, refIterator;
 
-            // Define variables to hold the segments vertices and to save the contour start point.
-            VECTOR2I testContourStart = *testIterator;
-            VECTOR2I testSegmentStart, testSegmentEnd;
+            testIterator = testSmoothedPoly->IterateSegmentsWithHoles();
 
             // Iterate through all the vertices
-            while( testIterator )
+            for( ; testIterator; testIterator++ )
             {
-                // Get segment start
-                testSegmentStart = *testIterator;
-
-                // Get segment end
-                if( testIterator.IsEndContour() )
-                {
-                    testSegmentEnd = testContourStart;
-
-                    // Advance
-                    testIterator++;
-
-                    testContourStart = *testIterator;
-                }
-                else
-                {
-                    // Advance
-                    testIterator++;
-
-                    testSegmentEnd = *testIterator;
-                }
-
                 // Build segment
-                SEG testSegment( testSegmentStart, testSegmentEnd );
+                SEG testSegment = *testIterator;
 
                 // Define an iterator to visit deges on ref polygon.
-                SHAPE_POLY_SET::ITERATOR refIterator = refSmoothedPoly->IterateWithHoles();
+                refIterator = refSmoothedPoly->IterateSegmentsWithHoles();
 
-                // Define variables to hold the segments vertices and to save the contour start point.
-                VECTOR2I refContourStart = *refIterator;
-                VECTOR2I refSegmentStart, refSegmentEnd;
-
-                // Iterate through all remaining segments
-                while( refIterator )
+                // Iterate through all the vertices
+                for( ; refIterator; refIterator++ )
                 {
-                    // Get segment start
-                    refSegmentStart = *refIterator;
-
-                    // Get segment end
-                    if( refIterator.IsEndContour() )
-                    {
-                        refSegmentEnd = refContourStart;
-
-                        // Advance
-                        refIterator++;
-
-                        refContourStart = *refIterator;
-                    }
-                    else
-                    {
-                        // Advance
-                        refIterator++;
-
-                        refSegmentEnd = *refIterator;
-                    }
 
                     // Build second segment
-                    SEG refSegment( refSegmentStart, refSegmentEnd );
+                    SEG refSegment = refIterator;
 
                     int x, y;
 
                     int ax1, ay1, ax2, ay2;
-                    ax1 = testSegmentStart.x;
-                    ay1 = testSegmentStart.y;
-                    ax2 = testSegmentEnd.x;
-                    ay2 = testSegmentEnd.y;
+                    ax1 = testSegment.A.x;
+                    ay1 = testSegment.A.y;
+                    ax2 = testSegment.B.x;
+                    ay2 = testSegment.B.y;
 
                     int bx1, by1, bx2, by2;
-                    bx1 = refSegmentStart.x;
-                    by1 = refSegmentStart.y;
-                    bx2 = refSegmentEnd.x;
-                    by2 = refSegmentEnd.y;
+                    bx1 = refSegment.A.x;
+                    by1 = refSegment.A.y;
+                    bx2 = refSegment.B.x;
+                    by2 = refSegment.B.y;
 
                     int d = GetClearanceBetweenSegments( bx1, by1, bx2, by2,
                                                          0,
