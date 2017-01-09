@@ -201,15 +201,14 @@ bool BOARD::TestAreaIntersection( ZONE_CONTAINER* area_ref, ZONE_CONTAINER* area
 
     SHAPE_POLY_SET::SEGMENT_ITERATOR segIterator1, segIterator2;
 
-    segIterator1 = poly1->IterateWithHoles();
-
     // Iterate through all the vertices
-    for( segIterator1 = poly1->IterateWithHoles(); segIterator1; segIterator1++ )
+    for( segIterator1 = poly1->IterateSegmentsWithHoles(); segIterator1; segIterator1++ )
     {
         // Build segment
         SEG firstSegment = *segIterator1;
 
-        for( segIterator2 = poly2->IterateWithHoles(); segIterator2; segIterator2++ )
+        for( segIterator2 = poly2->IterateSegmentsWithHoles(); segIterator2; segIterator2++ )
+        {
             // Build second segment
             SEG secondSegment = *segIterator2;
 
