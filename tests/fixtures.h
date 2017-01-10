@@ -133,4 +133,33 @@ struct ChamferFilletFixture {
      ~CollisionFixture(){}
  };
 
+ /**
+  * Fixture for the Iterator test suite. It contains a copy of the common polygon set and two
+  * vector containing colliding and non-colliding points.
+  */
+  struct IteratorFixture {
+      // Polygon set common for all the tests
+      SHAPE_POLY_SET polySet;
+
+      IteratorFixture()
+      {
+          // Get a copy of the polySet
+          polySet = CommonTestData().polySet;
+
+          SHAPE_LINE_CHAIN polyLine;
+
+          // Adds a new squared outline
+          polyLine.Append( 200,200 );
+          polyLine.Append( 500,500 );
+          polyLine.Append( 700,700 );
+          polyLine.Append( 700,700 );
+          polyLine.SetClosed( true );
+
+          polySet.AddOutline(polyLine);
+
+      }
+
+      ~IteratorFixture(){}
+  };
+
 #endif //__FIXTURES_H

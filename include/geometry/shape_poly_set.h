@@ -471,6 +471,7 @@ class SHAPE_POLY_SET : public SHAPE
             iter.m_poly = this;
             iter.m_currentPolygon = aFirst;
             iter.m_lastPolygon = aLast < 0 ? OutlineCount() - 1 : aLast;
+            iter.m_currentContour = 0;
             iter.m_currentVertex = 0;
             iter.m_iterateHoles = aIterateHoles;
 
@@ -509,6 +510,7 @@ class SHAPE_POLY_SET : public SHAPE
             iter.m_poly = const_cast<SHAPE_POLY_SET*>( this );
             iter.m_currentPolygon = aFirst;
             iter.m_lastPolygon = aLast < 0 ? OutlineCount() - 1 : aLast;
+            iter.m_currentContour = 0;
             iter.m_currentVertex = 0;
             iter.m_iterateHoles = aIterateHoles;
 
@@ -562,6 +564,7 @@ class SHAPE_POLY_SET : public SHAPE
             iter.m_poly = this;
             iter.m_currentPolygon = aFirst;
             iter.m_lastPolygon = aLast < 0 ? OutlineCount() - 1 : aLast;
+            iter.m_currentContour = 0;
             iter.m_currentSegment = 0;
             iter.m_iterateHoles = aIterateHoles;
 

@@ -801,6 +801,16 @@ void ZONE_CONTAINER::AddPolygon( std::vector< wxPoint >& aPolygon )
         return;
 
     SHAPE_LINE_CHAIN outline;
+
+    // Create an outline and populate it with the points of aPolygon
+    for( unsigned i = 0;  i < aPolygon.size();  i++ )
+    {
+        outline.Append( VECTOR2I( aPolygon[i] ) );
+    }
+
+    outline.SetClosed( true );
+
+    // Add the outline as a new polygon in the polygon set
     m_Poly->AddOutline( outline );
 }
 
@@ -889,17 +899,17 @@ void ZONE_CONTAINER::Hatch()
 {
     UnHatch();
 
-    if( m_hatchStyle == NO_HATCH || m_hatchPitch == 0 )
+    if( m_hatchStyle == NO_HATCH || m_hatchPitch == 0 || m_Poly->IsEmpty() )
         return;
 
     // if( !GetClosed() ) // If not closed, the poly is beeing created and not finalised. Not not hatch
     //     return;
 
     // define range for hatch lines
-    int min_x   = m_Poly->Vertex(0, 0, 0).x;
-    int max_x   = m_Poly->Vertex(0, 0, 0).x;
-    int min_y   = m_Poly->Vertex(0, 0, 0).y;
-    int max_y   = m_Poly->Vertex(0, 0, 0).y;
+    int min_x   = m_Poly->Vertex(0).x;
+    int max_x   = m_Poly->Vertex(0).x;
+    int min_y   = m_Poly->Vertex(0).y;
+    int max_y   = m_Poly->Vertex(0).y;
 
     for( SHAPE_POLY_SET::ITERATOR iterator = m_Poly->IterateWithHoles(); iterator; iterator++ )
     {

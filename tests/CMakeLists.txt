@@ -5,6 +5,7 @@ add_executable(MyTests
     module.cpp
     chamfer_fillet_test.cpp
     collision_test.cpp
+    polygon_iterator.cpp
 )
 
 include_directories(
