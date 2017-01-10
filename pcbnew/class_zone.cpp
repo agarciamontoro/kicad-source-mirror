@@ -622,7 +622,8 @@ void ZONE_CONTAINER::GetMsgPanelInfo( std::vector< MSG_PANEL_ITEM >& aList )
     // Display Cutout instead of Outline for holes inside a zone
     // i.e. when num contour !=0
     // Check whether the selected corner is in a hole; i.e., in any contour but the first one.
-    if( m_CornerSelection->m_contour > 0 )
+    if( m_CornerSelection != nullptr )
+      if( m_CornerSelection->m_contour > 0 )
         msg << wxT( " " ) << _( "(Cutout)" );
 
     aList.push_back( MSG_PANEL_ITEM( _( "Type" ), msg, DARKCYAN ) );

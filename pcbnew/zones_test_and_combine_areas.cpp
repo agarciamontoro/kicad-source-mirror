@@ -448,17 +448,19 @@ bool DRC::doEdgeZoneDrc( ZONE_CONTAINER* aArea, int aCornerIndex )
 {
     if( !aArea->IsOnCopperLayer() )    // Cannot have a Drc error if not on copper layer
         return true;
+    // Get polygon, contour and vertex index.
+    SHAPE_POLY_SET::VERTEX_INDEX index;
+    aArea->Outline()->GetRelativeIndices( aCornerIndex, &index );
 
-    SHAPE_POLY_SET::ITERATOR iterator = aArea->Outline()->IterateFromVertexWithHoles(aCornerIndex);
+    // Retrieve the selected contour
+    SHAPE_LINE_CHAIN contour;
+    contour = aArea->Outline()->Polygon( index.m_polygon )[index.m_contour];
 
-    // Obtain start
-    VECTOR2I  start = *iterator;
+    // Retrieve the segment that starts at aCornerIndex-th corner.
+    SEG selectedSegment = contour.Segment( index.m_vertex );
 
-    // Advance to the next point
-    iterator++;
-
-    // Obtain end
-    VECTOR2I  end = *iterator;
+    VECTOR2I start = selectedSegment.A;
+    VECTOR2I end = selectedSegment.B;
 
     // iterate through all areas
     for( int ia2 = 0; ia2 < m_pcb->GetAreaCount(); ia2++ )
