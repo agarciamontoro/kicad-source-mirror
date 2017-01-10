@@ -2405,6 +2405,8 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
                 NewArea->SetLocalFlags( 1 );
             }
         }
+
+        delete pa;
     }
 
     return true;
