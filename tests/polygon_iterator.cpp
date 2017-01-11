@@ -81,4 +81,30 @@ BOOST_AUTO_TEST_CASE( EmptyPolygon )
     }
 }
 
+/**
+ *
+ */
+BOOST_AUTO_TEST_CASE( UniqueVertex )
+{
+    SHAPE_POLY_SET uniqueVertexSet;
+
+    SHAPE_LINE_CHAIN polyLine;
+
+    polyLine.Append( 100, 50 );
+    polyLine.SetClosed( true );
+    uniqueVertexSet.AddOutline(polyLine);
+
+    SHAPE_POLY_SET::SEGMENT_ITERATOR iterator = uniqueVertexSet.IterateSegmentsWithHoles();
+
+    SEG segment = *iterator;
+    BOOST_CHECK( segment.A.x == 100 );
+    BOOST_CHECK( segment.B.x == 100 );
+    BOOST_CHECK( segment.A.y == 50  );
+    BOOST_CHECK( segment.B.y == 50  );
+
+    iterator++;
+
+    BOOST_CHECK( !iterator );
+}
+
 BOOST_AUTO_TEST_SUITE_END()
