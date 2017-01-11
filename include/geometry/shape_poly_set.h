@@ -356,7 +356,8 @@ class SHAPE_POLY_SET : public SHAPE
         int AddHole( const SHAPE_LINE_CHAIN& aHole, int aOutline = -1 );
 
         ///> Appends a vertex at the end of the given outline/hole (default: the last outline)
-        int Append( int x, int y, int aOutline = -1, int aHole = -1 );
+        int Append( int x, int y, int aOutline = -1, int aHole = -1,
+                    bool aAllowDuplication = false );
 
         ///> Merges polygons from two sets.
         void Append( const SHAPE_POLY_SET& aSet );

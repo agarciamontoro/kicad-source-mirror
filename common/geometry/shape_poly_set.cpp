@@ -169,7 +169,7 @@ int SHAPE_POLY_SET::NewHole( int aOutline )
 }
 
 
-int SHAPE_POLY_SET::Append( int x, int y, int aOutline, int aHole )
+int SHAPE_POLY_SET::Append( int x, int y, int aOutline, int aHole, bool aAllowDuplication )
 {
     if( aOutline < 0 )
         aOutline += m_polys.size();
@@ -184,7 +184,7 @@ int SHAPE_POLY_SET::Append( int x, int y, int aOutline, int aHole )
     assert( aOutline < (int)m_polys.size() );
     assert( idx < (int)m_polys[aOutline].size() );
 
-    m_polys[aOutline][idx].Append( x, y );
+    m_polys[aOutline][idx].Append( x, y, aAllowDuplication );
 
     return m_polys[aOutline][idx].PointCount();
 }

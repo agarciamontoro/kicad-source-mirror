@@ -490,12 +490,12 @@ public:
         m_Poly->NewHole();
     }
 
-    void AppendCorner( wxPoint position )
+    void AppendCorner( wxPoint position, bool aAllowDuplication )
     {
         if( m_Poly->OutlineCount() == 0 )
             m_Poly->NewOutline();
 
-        m_Poly->Append( position.x, position.y );
+        m_Poly->Append( position.x, position.y, aAllowDuplication );
     }
 
     HATCH_STYLE GetHatchStyle() const

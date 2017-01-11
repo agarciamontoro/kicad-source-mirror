@@ -666,6 +666,7 @@ int PCB_EDIT_FRAME::Begin_Zone( wxDC* DC )
 
         zone->SetLayer( zoneInfo.m_CurrentZone_Layer );
         zone->AppendCorner( GetCrossHairPosition() );
+        zone->AppendCorner( GetCrossHairPosition(), -1, -1, true );
 
         if( g_Drc_On && (m_drc->Drc( zone, 0 ) == BAD_DRC) && zone->IsOnCopperLayer() )
         {
