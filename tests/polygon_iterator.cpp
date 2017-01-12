@@ -107,4 +107,13 @@ BOOST_AUTO_TEST_CASE( UniqueVertex )
     BOOST_CHECK( !iterator );
 }
 
+/**
+ *
+ */
+BOOST_AUTO_TEST_CASE( TotalVertices )
+{
+    SHAPE_POLY_SET emptySet;
+    BOOST_CHECK_EQUAL( emptySet.TotalVertices(), 0 );
+}
+
 BOOST_AUTO_TEST_SUITE_END()

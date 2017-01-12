@@ -2356,7 +2356,7 @@ ZONE_CONTAINER* BOARD::InsertArea( int netcode, int iarea, LAYER_ID layer, int x
     new_area->SetLayer( layer );
     new_area->SetTimeStamp( GetNewTimeStamp() );
     new_area->SetHatchStyle( (ZONE_CONTAINER::HATCH_STYLE) hatch );
-    new_area->Outline()->Append( x, y );
+    new_area->AppendCorner( wxPoint( x, y ) );
 
     if( iarea < (int) ( m_ZoneDescriptorList.size() - 1 ) )
         m_ZoneDescriptorList.insert( m_ZoneDescriptorList.begin() + iarea + 1, new_area );

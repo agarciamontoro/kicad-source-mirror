@@ -414,13 +414,18 @@ void ZONE_CONTAINER::DrawWhileCreateOutline( EDA_DRAW_PANEL* panel, wxDC* DC,
         // contour
         if( !iterator.IsEndContour() )
         {
+            // Set GR mode to default
+            current_gr_mode = draw_mode;
+
+            SHAPE_POLY_SET::ITERATOR iterator_copy = iterator;
+            iterator_copy++;
+            if( iterator_copy.IsEndContour() )
+                current_gr_mode = GR_XOR;
+
             is_close_segment = false;
 
             iterator++;
             seg_end = *iterator;
-
-            // Set GR mode to default
-            current_gr_mode = draw_mode;
         }
         else{
             is_close_segment = true;
