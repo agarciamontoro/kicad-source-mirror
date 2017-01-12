@@ -990,7 +990,8 @@ int SHAPE_POLY_SET::RemoveNullSegments()
             // Advance
             iterator++;
 
-            contourStart = *iterator;
+            if( iterator )
+                contourStart = *iterator;
         }
         else
         {

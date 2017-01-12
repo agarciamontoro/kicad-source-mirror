@@ -414,6 +414,8 @@ void ZONE_CONTAINER::DrawWhileCreateOutline( EDA_DRAW_PANEL* panel, wxDC* DC,
         // contour
         if( !iterator.IsEndContour() )
         {
+            is_close_segment = false;
+
             iterator++;
             seg_end = *iterator;
 
@@ -421,11 +423,15 @@ void ZONE_CONTAINER::DrawWhileCreateOutline( EDA_DRAW_PANEL* panel, wxDC* DC,
             current_gr_mode = draw_mode;
         }
         else{
+            is_close_segment = true;
+
             seg_end = contour_first_point;
 
             // Reassign first point of the contour to the next contour start
             iterator++;
-            contour_first_point = *iterator;
+
+            if( iterator )
+                contour_first_point = *iterator;
 
             // Set GR mode to XOR
             current_gr_mode = GR_XOR;
@@ -482,6 +488,9 @@ bool ZONE_CONTAINER::HitTest( const wxPoint& aPosition ) const
 
 void ZONE_CONTAINER::SetSelectedCorner( const wxPoint& aPosition )
 {
+    if( !m_CornerSelection )
+        m_CornerSelection = new SHAPE_POLY_SET::VERTEX_INDEX;
+
     if( !HitTestForCorner( aPosition, *m_CornerSelection ))
     {
         HitTestForEdge( aPosition, *m_CornerSelection );
