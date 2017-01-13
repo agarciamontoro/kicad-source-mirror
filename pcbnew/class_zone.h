@@ -500,13 +500,11 @@ public:
 
     HATCH_STYLE GetHatchStyle() const
     {
-        // REVIEW: this was implemented callnig the correspondent method on CPolyLine
         return m_hatchStyle;
     }
 
     void SetHatchStyle( HATCH_STYLE aStyle )
     {
-        // REVIEW: this was implemented callnig the correspondent method on CPolyLine
         m_hatchStyle = aStyle;
     }
 
