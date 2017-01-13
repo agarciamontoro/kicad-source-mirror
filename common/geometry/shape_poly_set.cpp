@@ -1,8 +1,9 @@
 /*
  * This program source code file is part of KiCad, a free EDA CAD application.
  *
- * Copyright (C) 2015 CERN
+ * Copyright (C) 2015-2017 CERN
  * @author Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ * @author Alejandro García Montoro <alejandro.garciamontoro@gmail.com>
  *
  * Point in polygon algorithm adapted from Clipper Library (C) Angus Johnson,
  * subject to Clipper library license.

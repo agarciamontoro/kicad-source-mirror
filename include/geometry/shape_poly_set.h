@@ -1,7 +1,7 @@
 /*
  * This program source code file is part of KiCad, a free EDA CAD application.
  *
- * Copyright (C) 2015 CERN
+ * Copyright (C) 2015-2017 CERN
  * @author Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
  * @author Alejandro García Montoro <alejandro.garciamontoro@gmail.com>
  *
@@ -546,7 +546,7 @@ class SHAPE_POLY_SET : public SHAPE
             // Get the relative indices of the globally indexed vertex
             VERTEX_INDEX indices;
 
-            GetRelativeIndices( aGlobalIdx, &indices );
+            assert( GetRelativeIndices( aGlobalIdx, &indices ) );
 
             // Adjust where the iterator is pointing
             iter.m_currentPolygon = indices.m_polygon;
