@@ -450,7 +450,10 @@ bool DRC::doEdgeZoneDrc( ZONE_CONTAINER* aArea, int aCornerIndex )
         return true;
     // Get polygon, contour and vertex index.
     SHAPE_POLY_SET::VERTEX_INDEX index;
-    aArea->Outline()->GetRelativeIndices( aCornerIndex, &index );
+
+    // If the vertex does not exist, there is no conflict
+    if( !aArea->Outline()->GetRelativeIndices( aCornerIndex, &index ) )
+        return true;
 
     // Retrieve the selected contour
     SHAPE_LINE_CHAIN contour;

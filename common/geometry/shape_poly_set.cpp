@@ -193,7 +193,8 @@ void SHAPE_POLY_SET::InsertVertex( int aGlobalIndex, VECTOR2I aNewVertex )
 {
     VERTEX_INDEX index;
 
-    GetRelativeIndices( aGlobalIndex, &index );
+    // Assure the position to be inserted exists; abort otherwise
+    assert( GetRelativeIndices( aGlobalIndex, &index ) );
 
     m_polys[index.m_polygon][index.m_contour].Insert( index.m_vertex, aNewVertex );
 }
@@ -287,7 +288,8 @@ SEG SHAPE_POLY_SET::Edge( int aGlobalIndex )
 {
     SHAPE_POLY_SET::VERTEX_INDEX indices;
 
-    GetRelativeIndices( aGlobalIndex, &indices );
+    // If the edge does not exist, abort, it is like an illegal access memory error
+    assert( GetRelativeIndices( aGlobalIndex, &indices ) );
 
     return m_polys[indices.m_polygon][indices.m_contour].Segment(indices.m_vertex);
 }
@@ -1123,7 +1125,8 @@ void SHAPE_POLY_SET::RemoveVertex( int aGlobalIndex )
 {
     VERTEX_INDEX index;
 
-    GetRelativeIndices( aGlobalIndex, &index );
+    // Assure the to be removed vertex exists, abort otherwise
+    assert( GetRelativeIndices( aGlobalIndex, &index ) );
 
     RemoveVertex( index );
 }
@@ -1364,8 +1367,9 @@ bool SHAPE_POLY_SET::IsVertexInHole( int aGlobalIdx )
 {
     VERTEX_INDEX index;
 
-    // Get the polygon and contour where the vertex is
-    GetRelativeIndices( aGlobalIdx, &index );
+    // Get the polygon and contour where the vertex is. If the vertex does not exist, return false
+    if( !GetRelativeIndices( aGlobalIdx, &index ) )
+        return false;
 
     // The contour is a hole if its index is greater than zero
     return index.m_contour > 0;
