@@ -114,7 +114,7 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
 
     // Replace the outlines for aOther outlines.
     delete m_Poly;
-    m_Poly = (SHAPE_POLY_SET*) aOther.Clone();
+    m_Poly = new SHAPE_POLY_SET( *aOther.m_Poly );
 
     m_CornerSelection  = nullptr; // for corner moving, corner index to (null if no selection)
     m_ZoneClearance    = aOther.m_ZoneClearance;            // clearance value
