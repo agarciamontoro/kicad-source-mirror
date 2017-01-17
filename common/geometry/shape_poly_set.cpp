@@ -1083,7 +1083,7 @@ bool SHAPE_POLY_SET::CollideEdge( const VECTOR2I& aPoint,
     for (iterator = IterateSegmentsWithHoles(); iterator; iterator++)
     {
         SEG currentSegment = *iterator;
-        int distance = currentSegment.LineDistance( aPoint );
+        int distance = currentSegment.Distance( aPoint );
 
         // Check for collisions
         if(distance <= aClearance)
