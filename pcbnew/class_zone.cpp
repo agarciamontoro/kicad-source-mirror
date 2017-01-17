@@ -214,8 +214,8 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
         // Create the segment
         SEG segment = *iterator;
 
-        lines.push_back( (wxPoint) segment.A );
-        lines.push_back( (wxPoint) segment.B );
+        lines.push_back( (wxPoint) segment.A + offset );
+        lines.push_back( (wxPoint) segment.B + offset );
     }
 
     GRLineArray( panel->GetClipBox(), DC, lines, 0, color );
@@ -715,10 +715,7 @@ void ZONE_CONTAINER::GetMsgPanelInfo( std::vector< MSG_PANEL_ITEM >& aList )
 void ZONE_CONTAINER::Move( const wxPoint& offset )
 {
     /* move outlines */
-    for( int ii = 0; ii < m_Poly->TotalVertices(); ii++ )
-    {
-        SetCornerPosition( ii, GetCornerPosition( ii ) + offset );
-    }
+    m_Poly->Move( VECTOR2I( offset.x, offset.y ) );
 
     Hatch();
 
