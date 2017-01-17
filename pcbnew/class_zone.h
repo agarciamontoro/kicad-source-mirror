@@ -459,19 +459,14 @@ public:
         m_Poly->RemoveAllContours();
     }
 
-    const wxPoint GetCornerPosition( int aCornerIndex ) const
+    const wxPoint& GetCornerPosition( int aCornerIndex ) const
     {
         SHAPE_POLY_SET::VERTEX_INDEX index;
 
         // Convert global to relative indices
         assert( m_Poly->GetRelativeIndices( aCornerIndex, &index ) );
 
-        wxPoint corner;
-
-        corner.x = m_Poly->CVertex( index ).x;
-        corner.y = m_Poly->CVertex( index ).y;
-
-        return corner;
+        return (const wxPoint&) m_Poly->CVertex( index );
     }
 
     void SetCornerPosition( int aCornerIndex, wxPoint new_pos )
