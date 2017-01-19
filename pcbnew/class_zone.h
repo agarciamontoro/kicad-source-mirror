@@ -94,6 +94,14 @@ public:
 
     /**
      * Function GetPosition
+     *
+     * Returns a reference to the first corner of the polygon set.
+     *
+     * \warning The implementation of this function relies on the fact that wxPoint and VECTOR2I
+     * have the same layout. If you intend to use the returned reference directly, please note
+     * that you are _only_ allowed to use members x and y. Any use on anything that is not one of
+     * these members will have undefined behaviour.
+     *
      * @return a wxPoint, position of the first point of the outline
      */
     const wxPoint& GetPosition() const override;
@@ -459,14 +467,14 @@ public:
         m_Poly->RemoveAllContours();
     }
 
-    const wxPoint& GetCornerPosition( int aCornerIndex ) const
+    const VECTOR2I& GetCornerPosition( int aCornerIndex ) const
     {
         SHAPE_POLY_SET::VERTEX_INDEX index;
 
         // Convert global to relative indices
         assert( m_Poly->GetRelativeIndices( aCornerIndex, &index ) );
 
-        return (const wxPoint&) m_Poly->CVertex( index );
+        return m_Poly->CVertex( index );
     }
 
     void SetCornerPosition( int aCornerIndex, wxPoint new_pos )
@@ -681,6 +689,42 @@ private:
     HATCH_STYLE           m_hatchStyle;     // hatch style, see enum above
     int                   m_hatchPitch;     // for DIAGONAL_EDGE, distance between 2 hatch lines
     std::vector<SEG>      m_HatchLines;     // hatch lines
+
+    /**
+     * Union to handle conversion between references to wxPoint and to VECTOR2I.
+     *
+     * The function GetPosition(), that returns a
+     * reference to a wxPoint, needs some existing wxPoint object that it can point to. The header
+     * of this function cannot be changed, as it overrides the function from the base class
+     * BOARD_ITEM. This made sense when ZONE_CONTAINER was implemented using the legacy CPolyLine
+     * class, that worked with wxPoints. However, m_Poly is a SHAPE_POLY_SET, whose corners are
+     * objects of type VECTOR2I, not wxPoint. Thus, we cannot directly reference the first corner
+     * of m_Poly, so a modified version of it that can be read as a wxPoint needs to be handled.
+     * Taking advantage of the fact that both wxPoint and VECTOR2I have the same memory layout
+     * (two integers: x, y), this union let us convert a reference to a VECTOR2I into a reference
+     * to a wxPoint.
+     *
+     * The idea is the following: in GetPosition(), m_Poly->GetCornerPosition( 0 ) returns a
+     * reference to the first corner of the polygon set. If we retrieve its memory direction, we
+     * can tell the compiler to cast that pointer to a WX_VECTOR_CONVERTER pointer. We can finally
+     * shape that memory layout as a wxPoint picknig the wx member of the union.
+     *
+     * Although this solution is somewhat unstable, as it relies on the fact that the memory
+     * layout is exactly the same, it is the best attempt to keep backwards compatibility while
+     * using the new SHAPE_POLY_SET.
+     */
+    typedef union {
+        wxPoint wx;
+        VECTOR2I vector;
+    } WX_VECTOR_CONVERTER;
+
+    // Sanity check: assure that the conversion VECTOR2I->wxPoint using the previous union is
+    // sensible
+    static_assert(offsetof(wxPoint,x) == offsetof(VECTOR2I,x),
+                  "wxPoint::x and VECTOR2I::x have different offsets");
+    static_assert(offsetof(wxPoint,y) == offsetof(VECTOR2I,y),
+                  "wxPoint::y and VECTOR2I::y have different offsets");
+
 };
 
 

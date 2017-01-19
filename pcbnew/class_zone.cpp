@@ -165,9 +165,10 @@ bool ZONE_CONTAINER::UnFill()
 
 const wxPoint& ZONE_CONTAINER::GetPosition() const
 {
-    static const wxPoint dummy;
+    const WX_VECTOR_CONVERTER* pos;
 
-    return m_Poly ? GetCornerPosition( 0 ) : dummy;
+    pos = reinterpret_cast<const WX_VECTOR_CONVERTER*>( &GetCornerPosition( 0 ) );
+    return pos->wx;
 }
 
 
@@ -214,8 +215,8 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
         // Create the segment
         SEG segment = *iterator;
 
-        lines.push_back( (wxPoint) segment.A + offset );
-        lines.push_back( (wxPoint) segment.B + offset );
+        lines.push_back( static_cast<wxPoint>( segment.A ) + offset );
+        lines.push_back( static_cast<wxPoint>( segment.B ) + offset );
     }
 
     GRLineArray( panel->GetClipBox(), DC, lines, 0, color );
@@ -226,8 +227,8 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
 
     for( unsigned ic = 0; ic < m_HatchLines.size(); ic++ )
     {
-        seg_start = (wxPoint)m_HatchLines[ic].A + offset;
-        seg_end   = (wxPoint)m_HatchLines[ic].B + offset;
+        seg_start = static_cast<wxPoint>( m_HatchLines[ic].A ) + offset;
+        seg_end   = static_cast<wxPoint>( m_HatchLines[ic].B ) + offset;
         lines.push_back( seg_start );
         lines.push_back( seg_end );
     }
@@ -360,7 +361,7 @@ const EDA_RECT ZONE_CONTAINER::GetBoundingBox() const
 
     for( int i = 0; i<count; ++i )
     {
-        wxPoint corner = GetCornerPosition( i );
+        wxPoint corner = static_cast<wxPoint>( GetCornerPosition( i ) );
 
         ymax = std::max( ymax, corner.y );
         xmax = std::max( xmax, corner.x );
@@ -560,7 +561,7 @@ bool ZONE_CONTAINER::HitTest( const EDA_RECT& aRect, bool aContained, int aAccur
         // and can intersect the polygon: use a fine test.
         // aBox intersects the polygon if at least one aBox corner
         // is inside the polygon
-        wxPoint corner = (wxPoint)aBox.GetOrigin();
+        wxPoint corner = static_cast<wxPoint>( aBox.GetOrigin() );
 
         if( HitTestInsideZone( corner ) )
             return true;
@@ -570,7 +571,7 @@ bool ZONE_CONTAINER::HitTest( const EDA_RECT& aRect, bool aContained, int aAccur
         if( HitTestInsideZone( corner ) )
             return true;
 
-        corner = (wxPoint) aBox.GetEnd();
+        corner = static_cast<wxPoint>( aBox.GetEnd() );
 
         if( HitTestInsideZone( corner ) )
             return true;
@@ -746,7 +747,7 @@ void ZONE_CONTAINER::Rotate( const wxPoint& centre, double angle )
 
     for( SHAPE_POLY_SET::ITERATOR iterator = m_Poly->IterateWithHoles(); iterator; iterator++ )
     {
-        pos = (wxPoint) *iterator;
+        pos = static_cast<wxPoint>( *iterator );
         RotatePoint( &pos, centre, angle );
         iterator->x = pos.x;
         iterator->y = pos.y;

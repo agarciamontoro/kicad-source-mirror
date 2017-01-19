@@ -270,7 +270,7 @@ void PCB_EDIT_FRAME::Start_Move_Zone_Corner( wxDC* DC, ZONE_CONTAINER* aZone,
     aZone->SetFlags( IN_EDIT );
     m_canvas->SetMouseCapture( Show_Zone_Corner_Or_Outline_While_Move_Mouse,
                                 Abort_Zone_Move_Corner_Or_Outlines );
-    s_CornerInitialPosition = aZone->GetCornerPosition( corner_id );
+    s_CornerInitialPosition = static_cast<wxPoint>( aZone->GetCornerPosition( corner_id ) );
     s_CornerIsNew = IsNewCorner;
     s_AddCutoutToCurrentZone = false;
     s_CurrentZone = NULL;
@@ -772,7 +772,7 @@ bool PCB_EDIT_FRAME::End_Zone( wxDC* DC )
     {
         for( int ii = 0; ii < zone->GetNumCorners(); ii++ )
         {
-            s_CurrentZone->AppendCorner( zone->GetCornerPosition( ii ) );
+            s_CurrentZone->AppendCorner( static_cast<wxPoint>( zone->GetCornerPosition( ii ) ) );
         }
 
         zone->RemoveAllContours();      // All corners are copied in s_CurrentZone. Free corner list.
@@ -839,7 +839,7 @@ static void Show_New_Edge_While_Move_Mouse( EDA_DRAW_PANEL* aPanel, wxDC* aDC,
     if( pcbframe->GetZoneSettings().m_Zone_45_Only )
     {
         // calculate the new position as allowed
-        wxPoint StartPoint = zone->GetCornerPosition( icorner - 1 );
+        wxPoint StartPoint = static_cast<wxPoint>( zone->GetCornerPosition( icorner - 1 ) );
         CalculateSegmentEndPoint( c_pos, StartPoint.x, StartPoint.y, &c_pos.x, &c_pos.y );
     }
 
