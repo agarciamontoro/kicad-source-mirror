@@ -1,7 +1,7 @@
 /*
  * This program source code file is part of KiCad, a free EDA CAD application.
  *
- * Copyright (C) 2013-2016 CERN
+ * Copyright (C) 2013-2017 CERN
  * @author Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
  * @author Maciej Suminski <maciej.suminski@cern.ch>
  *
@@ -50,8 +50,6 @@ using namespace std::placeholders;
 
 #include "selection_tool.h"
 #include "selection_area.h"
-#include "zoom_menu.h"
-#include "grid_menu.h"
 #include "bright_box.h"
 #include "common_actions.h"
 
@@ -70,8 +68,7 @@ public:
 SELECTION_TOOL::SELECTION_TOOL() :
         PCB_TOOL( "pcbnew.InteractiveSelection" ),
         m_frame( NULL ), m_additive( false ), m_multiple( false ),
-        m_locked( true ), m_menu( this ), m_contextMenu( NULL ), m_selectMenu( NULL ),
-        m_zoomMenu( NULL ), m_gridMenu( NULL )
+        m_locked( true ), m_menu( *this )
 {
     // Do not leave uninitialized members:
     m_preliminary = false;
@@ -81,11 +78,6 @@ SELECTION_TOOL::SELECTION_TOOL() :
 SELECTION_TOOL::~SELECTION_TOOL()
 {
     getView()->Remove( &m_selection );
-
-    delete m_contextMenu;
-    delete m_selectMenu;
-    delete m_zoomMenu;
-    delete m_gridMenu;
 }
 
 
@@ -96,25 +88,17 @@ bool SELECTION_TOOL::Init()
     auto showSelectMenuFunctor = ( S_C::OnlyType( PCB_VIA_T ) || S_C::OnlyType( PCB_TRACE_T ) )
                                     && S_C::Count( 1 );
 
-    m_selectMenu = new SELECT_MENU;
-    m_selectMenu->SetTool( this );
+    auto selectMenu = std::make_shared<SELECT_MENU>();
+    selectMenu->SetTool( this );
+    m_menu.AddSubMenu( selectMenu );
 
-    m_menu.AddMenu( m_selectMenu, _( "Select..." ), false, showSelectMenuFunctor );
+    auto& menu = m_menu.GetMenu();
+
+    menu.AddMenu( selectMenu.get(), _( "Select..." ), false, showSelectMenuFunctor );
     // only show separator if there is a Select menu to show above it
-    GetMenu().AddSeparator( showSelectMenuFunctor, 1000 );
+    menu.AddSeparator( showSelectMenuFunctor, 1000 );
 
-    m_menu.AddItem( COMMON_ACTIONS::zoomCenter, S_C::ShowAlways, 1000 );
-    m_menu.AddItem( COMMON_ACTIONS::zoomIn, S_C::ShowAlways, 1000  );
-    m_menu.AddItem( COMMON_ACTIONS::zoomOut , S_C::ShowAlways, 1000 );
-    m_menu.AddItem( COMMON_ACTIONS::zoomFitScreen , S_C::ShowAlways, 1000 );
-
-    PCB_BASE_FRAME* frame = getEditFrame<PCB_BASE_FRAME>();
-
-    m_zoomMenu = new ZOOM_MENU( frame );
-    m_menu.AddMenu( m_zoomMenu, _( "Zoom" ), false, S_C::ShowAlways, 1000 );
-
-    m_gridMenu = new GRID_MENU( frame );
-    m_menu.AddMenu( m_gridMenu, _( "Grid" ), false, S_C::ShowAlways, 1000 );
+    m_menu.AddStandardSubMenus( *getEditFrame<PCB_BASE_FRAME>() );
 
     return true;
 }
@@ -177,11 +161,7 @@ int SELECTION_TOOL::Main( const TOOL_EVENT& aEvent )
             if( emptySelection )
                 selectPoint( evt->Position() );
 
-            delete m_contextMenu;
-            m_contextMenu = m_menu.Generate( m_selection );
-
-            if( m_contextMenu->GetMenuItemCount() > 0 )
-                SetContextMenu( m_contextMenu, CMENU_NOW );
+            m_menu.ShowContextMenu( m_selection );
 
             m_preliminary = emptySelection;
         }
@@ -237,50 +217,9 @@ int SELECTION_TOOL::Main( const TOOL_EVENT& aEvent )
             }
         }
 
-        else if( evt->IsAction( &COMMON_ACTIONS::selectionCursor ) )
-        {
-            selectCursor( true );
-        }
-
-        else if( evt->IsAction( &COMMON_ACTIONS::find ) )
-        {
-            find( *evt );
-        }
-
-        else if( evt->IsAction( &COMMON_ACTIONS::findMove ) )
-        {
-            findMove( *evt );
-        }
-
-        else if( evt->IsAction( &COMMON_ACTIONS::selectItem ) )
-        {
-            SelectItem( *evt );
-        }
-
-        else if( evt->IsAction( &COMMON_ACTIONS::unselectItem ) )
-        {
-            UnselectItem( *evt );
-        }
-
-        else if( evt->IsCancel() || evt->Action() == TA_UNDO_REDO_PRE ||
-                 evt->IsAction( &COMMON_ACTIONS::selectionClear ) )
+        else if( evt->IsCancel() || evt->Action() == TA_UNDO_REDO_PRE )
         {
             clearSelection();
-        }
-
-        else if( evt->IsAction( &COMMON_ACTIONS::selectConnection ) )
-        {
-            selectConnection( *evt );
-        }
-
-        else if( evt->IsAction( &COMMON_ACTIONS::selectCopper ) )
-        {
-            selectCopper( *evt );
-        }
-
-        else if( evt->IsAction( &COMMON_ACTIONS::selectNet ) )
-        {
-            selectNet( *evt );
         }
 
         else if( evt->Action() == TA_CONTEXT_MENU_CLOSED )
@@ -288,11 +227,7 @@ int SELECTION_TOOL::Main( const TOOL_EVENT& aEvent )
             if( m_preliminary )
                 clearSelection();
 
-            if( evt->Parameter<CONTEXT_MENU*>() == m_contextMenu )
-            {
-                delete m_contextMenu;
-                m_contextMenu = NULL;
-            }
+            m_menu.CloseContextMenu( evt );
         }
     }
 
@@ -1420,17 +1355,6 @@ bool SELECTION_TOOL::SanitizeSelection()
     }
 
     return true;
-}
-
-
-SELECTION::SELECTION( KIGFX::VIEW* aView ) :
-    KIGFX::VIEW_GROUP( aView )
-{}
-
-
-void SELECTION::clear()
-{
-    m_items.clear();
 }
 
 
