@@ -48,6 +48,8 @@
 #include <math_for_graphics.h>
 #include <polygon_test_point_inside.h>
 
+#include <chrono>
+
 
 ZONE_CONTAINER::ZONE_CONTAINER( BOARD* aBoard ) :
     BOARD_CONNECTED_ITEM( aBoard, PCB_ZONE_AREA_T )
@@ -910,13 +912,24 @@ bool sortEndsByDescendingX( const VECTOR2I& ref, const VECTOR2I& tst )
 // Implementation copied from old CPolyLine
 void ZONE_CONTAINER::Hatch()
 {
+    using namespace std;
+    using namespace std::chrono;
+
+    high_resolution_clock::time_point t1, t2;
+
+    t1 = high_resolution_clock::now();
     UnHatch();
+    t2 = high_resolution_clock::now();
+
+    cout << "Unhatch: " << duration_cast<microseconds>( t2 - t1 ).count() << endl;
 
     if( m_hatchStyle == NO_HATCH || m_hatchPitch == 0 || m_Poly->IsEmpty() )
         return;
 
     // if( !GetClosed() ) // If not closed, the poly is beeing created and not finalised. Not not hatch
     //     return;
+
+    t1 = high_resolution_clock::now();
 
     // define range for hatch lines
     int min_x   = m_Poly->Vertex(0).x;
@@ -938,6 +951,10 @@ void ZONE_CONTAINER::Hatch()
         if( iterator->y > max_y )
             max_y = iterator->y;
     }
+
+    t2 = high_resolution_clock::now();
+
+    cout << "Min-max: " << duration_cast<microseconds>( t2 - t1 ).count() << endl;
 
     // Calculate spacing between 2 hatch lines
     int spacing;
@@ -981,6 +998,8 @@ void ZONE_CONTAINER::Hatch()
     static std::vector<VECTOR2I> pointbuffer;
     pointbuffer.clear();
     pointbuffer.reserve( MAXPTS + 2 );
+
+    t1 = high_resolution_clock::now();
 
     for( int a = min_a; a < max_a; a += spacing )
     {
@@ -1072,4 +1091,8 @@ void ZONE_CONTAINER::Hatch()
             }
         }
     }
+
+    t2 = high_resolution_clock::now();
+
+    cout << "Last loop: " << duration_cast<microseconds>( t2 - t1 ).count() << endl;
 }
