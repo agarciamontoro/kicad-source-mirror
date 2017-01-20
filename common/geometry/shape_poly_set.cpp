@@ -1001,7 +1001,8 @@ int SHAPE_POLY_SET::RemoveNullSegments()
             // Advance
             iterator++;
 
-            segmentEnd = *iterator;
+            if( iterator )
+                segmentEnd = *iterator;
         }
 
         // Remove segment start if both points are equal

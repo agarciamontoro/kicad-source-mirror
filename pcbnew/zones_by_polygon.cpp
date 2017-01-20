@@ -698,8 +698,14 @@ int PCB_EDIT_FRAME::Begin_Zone( wxDC* DC )
                 // Ok, we can add a new corner
                 if( m_canvas->IsMouseCaptured() )
                     m_canvas->CallMouseCapture( DC, wxPoint(0,0), false );
-                zone->AppendCorner( GetCrossHairPosition() );
+
+                // Is is necessary to allow duplication of the points, as we have to handle the
+                // continuous drawing while creating the zone at the same time as we build it. Null
+                // segments are removed when the zone is finished, in End_Zone.
+                zone->AppendCorner( GetCrossHairPosition(), true );
+
                 SetCurItem( zone );     // calls DisplayInfo().
+
                 if( m_canvas->IsMouseCaptured() )
                     m_canvas->CallMouseCapture( DC, wxPoint(0,0), false );
             }
