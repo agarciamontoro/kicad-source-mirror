@@ -2379,6 +2379,8 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
 
     if( curr_polygon->IsSelfIntersecting() )
     {
+        aCurrArea->UnHatch();
+
         // Copy area outline
         SHAPE_POLY_SET* pa = new SHAPE_POLY_SET( *curr_polygon );
 
@@ -2408,6 +2410,8 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
 
         delete pa;
     }
+
+    aCurrArea->Hatch();
 
     return true;
 }
