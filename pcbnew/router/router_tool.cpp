@@ -2,7 +2,7 @@
  * KiRouter - a push-and-(sometimes-)shove PCB router
  *
  * Copyright (C) 2013-2017 CERN
- * Copyright (C) 2016 KiCad Developers, see AUTHORS.txt for contributors.
+ * Copyright (C) 2017 KiCad Developers, see AUTHORS.txt for contributors.
  * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -50,6 +50,7 @@ using namespace std::placeholders;
 #include <tools/selection_tool.h>
 #include <tools/edit_tool.h>
 #include <tools/grid_menu.h>
+#include <tools/zoom_menu.h>
 
 #include <ratsnest_data.h>
 
@@ -146,49 +147,57 @@ public:
 
     OPT_TOOL_EVENT EventHandler( const wxMenuEvent& aEvent )
     {
-#if ID_POPUP_PCB_SELECT_VIASIZE1 < ID_POPUP_PCB_SELECT_WIDTH1
-#error You have changed event ids order, it breaks code. Check the source code for more details.
-// Recognising type of event (track width/via size) is based on comparison if the event id is
-// within a specific range. If ranges of event ids changes, then the following is not valid anymore.
-#endif
         BOARD_DESIGN_SETTINGS &bds = m_board->GetDesignSettings();
-
         int id = aEvent.GetId();
 
-        // Initial settings, to be modified below
-        bds.m_UseConnectedTrackWidth = false;
-        bds.UseCustomTrackViaSize( false );
+        // On Windows, this handler can be called with a  non existing event ID not existing
+        // in any menuitem.
+        // So we keep trace of in-range/out-of-range event ID
+        bool in_range = true;
+
+        // Initial settings, to be modified below, but only if the ID exists in this menu
+        bool useConnectedTrackWidth = false;
+        bool useCustomTrackViaSize = false;
 
         if( id == ID_POPUP_PCB_SELECT_CUSTOM_WIDTH )
         {
-            bds.UseCustomTrackViaSize( true );
+            useCustomTrackViaSize = true;
         }
-
         else if( id == ID_POPUP_PCB_SELECT_AUTO_WIDTH )
         {
-            bds.m_UseConnectedTrackWidth = true;
+            useConnectedTrackWidth = true;
         }
-
         else if( id == ID_POPUP_PCB_SELECT_USE_NETCLASS_VALUES )
         {
             bds.SetViaSizeIndex( 0 );
             bds.SetTrackWidthIndex( 0 );
         }
-
-        else if( id >= ID_POPUP_PCB_SELECT_VIASIZE1 )     // via size has changed
+        else if( id >= ID_POPUP_PCB_SELECT_VIASIZE1 &&
+                 id <= ID_POPUP_PCB_SELECT_VIASIZE16 )
         {
-            assert( id < ID_POPUP_PCB_SELECT_WIDTH_END_RANGE );
-
+           // via size has changed
             bds.SetViaSizeIndex( id - ID_POPUP_PCB_SELECT_VIASIZE1 );
         }
-
-        else    // track width has changed
+        else if( id >= ID_POPUP_PCB_SELECT_WIDTH1 &&
+                 id <= ID_POPUP_PCB_SELECT_WIDTH16 )
         {
-            assert( id >= ID_POPUP_PCB_SELECT_WIDTH1 );
-            assert( id < ID_POPUP_PCB_SELECT_VIASIZE );
-
+            // track width has changed
             bds.SetTrackWidthIndex( id - ID_POPUP_PCB_SELECT_WIDTH1 );
         }
+        else
+        {
+            in_range = false;   // This event ID does not exist in the menu
+            wxASSERT_MSG( false, "OPT_TOOL_EVENT EventHandler: unexpected id" );
+            // Fix me: How to return this error as OPT_TOOL_EVENT?
+        }
+
+        if( in_range )
+        {
+            // Update this setup only id the event ID matches the options of this menu
+            bds.m_UseConnectedTrackWidth = useConnectedTrackWidth;
+            bds.UseCustomTrackViaSize( useCustomTrackViaSize );
+        }
+
 
         return OPT_TOOL_EVENT( COMMON_ACTIONS::trackViaSizeChanged.MakeEvent() );
     }
@@ -202,7 +211,7 @@ class ROUTER_TOOL_MENU: public CONTEXT_MENU
 {
 public:
     ROUTER_TOOL_MENU( BOARD* aBoard, PCB_EDIT_FRAME& frame, PNS::ROUTER_MODE aMode ) :
-            m_gridMenu( &frame )
+                      m_zoomMenu( &frame ), m_gridMenu( &frame )
     {
         SetTitle( _( "Interactive Router" ) );
         Add( ACT_NewTrack );
@@ -227,11 +236,14 @@ public:
         AppendSeparator();
         Add( PNS::TOOL_BASE::ACT_RouterOptions );
 
-        Add( &m_gridMenu, _( "Grid" ), false );
+        AppendSeparator();
+        Add( &m_zoomMenu, _( "Zoom Select" ), false );
+        Add( &m_gridMenu, _( "Grid Select" ), false );
     }
 
 private:
     CONTEXT_TRACK_WIDTH_MENU m_widthMenu;
+    ZOOM_MENU m_zoomMenu;
     GRID_MENU m_gridMenu;
 };
 
