@@ -116,4 +116,79 @@ BOOST_AUTO_TEST_CASE( TotalVertices )
     BOOST_CHECK_EQUAL( emptySet.TotalVertices(), 0 );
 }
 
+/**
+ *
+ */
+BOOST_AUTO_TEST_CASE( RemoveLastNullSegment )
+{
+    SHAPE_POLY_SET polySet;
+    SHAPE_LINE_CHAIN polyLine, hole;
+
+    // Adds a new outline with a null segment
+    polyLine.Append( 100,100 );
+    polyLine.Append( 0,100 );
+    polyLine.Append( 0,0 );
+    polyLine.Append( 0,0,true );
+    polyLine.SetClosed( true );
+
+    polySet.AddOutline(polyLine);
+
+    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 4 );
+
+    BOOST_CHECK_EQUAL( polySet.RemoveNullSegments(), 1);
+
+    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 3 );
+}
+
+
+/**
+ *
+ */
+BOOST_AUTO_TEST_CASE( RemoveFirstNullSegment )
+{
+    SHAPE_POLY_SET polySet;
+    SHAPE_LINE_CHAIN polyLine, hole;
+
+    // Adds a new outline with a null segment
+    polyLine.Append( 100,100 );
+    polyLine.Append( 100,100,true );
+    polyLine.Append( 0,0 );
+    polyLine.Append( 100,0 );
+    polyLine.SetClosed( true );
+
+    polySet.AddOutline(polyLine);
+
+    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 4 );
+
+    BOOST_CHECK_EQUAL( polySet.RemoveNullSegments(), 1);
+
+    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 3 );
+}
+
+
+
+/**
+ *
+ */
+BOOST_AUTO_TEST_CASE( RemoveInsideNullSegment )
+{
+    SHAPE_POLY_SET polySet;
+    SHAPE_LINE_CHAIN polyLine, hole;
+
+    // Adds a new outline with a null segment
+    polyLine.Append( 100,100 );
+    polyLine.Append( 0,100 );
+    polyLine.Append( 0,100,true );
+    polyLine.Append( 100,0 );
+    polyLine.SetClosed( true );
+
+    polySet.AddOutline(polyLine);
+
+    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 4 );
+
+    BOOST_CHECK_EQUAL( polySet.RemoveNullSegments(), 1);
+
+    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 3 );
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -1010,6 +1010,9 @@ int SHAPE_POLY_SET::RemoveNullSegments()
         {
             RemoveVertex( indexStart );
             removed++;
+
+            // Advance the iterator one position, as there is one vertex less.
+            iterator++;
         }
     }
 
