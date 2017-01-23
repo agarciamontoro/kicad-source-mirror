@@ -129,8 +129,6 @@ public:
     /// Destructor
     // virtual ~VECTOR2();
 
-    T Distance( const VECTOR2<T> aOther ) const;
-
     /**
      * Function Euclidean Norm
      * computes the Euclidean norm of the vector, which is defined as sqrt(x ** 2 + y ** 2).
