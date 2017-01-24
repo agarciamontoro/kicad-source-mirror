@@ -39,15 +39,8 @@ BOOST_FIXTURE_TEST_SUITE( Collision, CollisionFixture )
  */
 BOOST_AUTO_TEST_CASE( HasHoles )
 {
-    SHAPE_POLY_SET solidPolySet;
-
-    // Add dummy outlines in the solid polygon set
-    solidPolySet.NewOutline();
-    solidPolySet.NewOutline();
-    solidPolySet.NewOutline();
-
-    BOOST_CHECK( !solidPolySet.HasHoles() );
-    BOOST_CHECK(  polySet.HasHoles() );
+    BOOST_CHECK( !common.solidPolySet.HasHoles() );
+    BOOST_CHECK(  common.holeyPolySet.HasHoles() );
 }
 
 /**
@@ -56,13 +49,13 @@ BOOST_AUTO_TEST_CASE( HasHoles )
 BOOST_AUTO_TEST_CASE( PointOnEdge )
 {
     // Check points on corners
-    BOOST_CHECK( polySet.PointOnEdge( VECTOR2I( 0,50 ) ) );
+    BOOST_CHECK( common.holeyPolySet.PointOnEdge( VECTOR2I( 0,50 ) ) );
 
     // Check points on outline edges
-    BOOST_CHECK( polySet.PointOnEdge( VECTOR2I( 0,10 ) ) );
+    BOOST_CHECK( common.holeyPolySet.PointOnEdge( VECTOR2I( 0,10 ) ) );
 
     // Check points on hole edges
-    BOOST_CHECK( polySet.PointOnEdge( VECTOR2I( 10,11 ) ) );
+    BOOST_CHECK( common.holeyPolySet.PointOnEdge( VECTOR2I( 10,11 ) ) );
 }
 
 /**
@@ -74,13 +67,13 @@ BOOST_AUTO_TEST_CASE( pointInPolygonSet )
     // Check that the set contains the point that collide with it
     for( const VECTOR2I& point : collidingPoints )
     {
-        BOOST_CHECK( polySet.Contains( point ) );
+        BOOST_CHECK( common.holeyPolySet.Contains( point ) );
     }
 
     // Check that the set does not contain any point outside of it
     for( const VECTOR2I& point : nonCollidingPoints )
     {
-        BOOST_CHECK( !polySet.Contains( point ) );
+        BOOST_CHECK( !common.holeyPolySet.Contains( point ) );
     }
 }
 
@@ -94,22 +87,22 @@ BOOST_AUTO_TEST_CASE( Collide )
     // Check that the set collides with the colliding points
     for( const VECTOR2I& point : collidingPoints )
     {
-        BOOST_CHECK( polySet.Collide( point, 0 ) );
+        BOOST_CHECK( common.holeyPolySet.Collide( point, 0 ) );
     }
 
     // Check that the set does not collide with the non colliding points
     for( const VECTOR2I& point : nonCollidingPoints )
     {
-        BOOST_CHECK( !polySet.Collide( point, 0 ) );
+        BOOST_CHECK( !common.holeyPolySet.Collide( point, 0 ) );
     }
 
     // Checks with clearence > 0
 
     // Point at the offseted zone outside of the outline => collision!
-    BOOST_CHECK( polySet.Collide( VECTOR2I( -1,10 ), 5 ) );
+    BOOST_CHECK( common.holeyPolySet.Collide( VECTOR2I( -1,10 ), 5 ) );
 
     // Point at the offseted zone outside of a hole => collision!
-    BOOST_CHECK( polySet.Collide( VECTOR2I( 11,11 ), 5 ) );
+    BOOST_CHECK( common.holeyPolySet.Collide( VECTOR2I( 11,11 ), 5 ) );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -35,39 +35,99 @@
  */
 struct CommonTestData
 {
-    // Polygon set common for all the tests
-    SHAPE_POLY_SET polySet;
+    // Polygon sets common for all the tests
+    SHAPE_POLY_SET emptyPolySet;
+    SHAPE_POLY_SET uniqueVertexPolySet;
+    SHAPE_POLY_SET solidPolySet;
+    SHAPE_POLY_SET holeyPolySet;
+
+    std::vector<VECTOR2I> uniquePoints;
+    std::vector<VECTOR2I> holeyPoints;
+    std::vector<SEG> holeySegments;
 
     CommonTestData()
     {
+        // UniqueVertexPolySet shall have a unique vertex
+        uniquePoints.push_back( VECTOR2I( 100, 50 ) );
+
+        // Populate the holey polygon set points with 12 points
+
+        // Square
+        holeyPoints.push_back( VECTOR2I( 100,100 ) );
+        holeyPoints.push_back( VECTOR2I( 0,100 ) );
+        holeyPoints.push_back( VECTOR2I( 0,0 ) );
+        holeyPoints.push_back( VECTOR2I( 100,0 ) );
+
+        // Pentagon
+        holeyPoints.push_back( VECTOR2I( 10,10 ) );
+        holeyPoints.push_back( VECTOR2I( 10,20 ) );
+        holeyPoints.push_back( VECTOR2I( 15,15 ) );
+        holeyPoints.push_back( VECTOR2I( 20,20 ) );
+        holeyPoints.push_back( VECTOR2I( 20,10 ) );
+
+        // Triangle
+        holeyPoints.push_back( VECTOR2I( 40,10 ) );
+        holeyPoints.push_back( VECTOR2I( 40,20 ) );
+        holeyPoints.push_back( VECTOR2I( 60,10 ) );
+
+        // Square segments
+        holeySegments.push_back( SEG( holeyPoints[0], holeyPoints[1] ) );
+        holeySegments.push_back( SEG( holeyPoints[1], holeyPoints[2] ) );
+        holeySegments.push_back( SEG( holeyPoints[2], holeyPoints[3] ) );
+        holeySegments.push_back( SEG( holeyPoints[3], holeyPoints[0] ) );
+
+        // Pentagon segments
+        holeySegments.push_back( SEG( holeyPoints[4], holeyPoints[5] ) );
+        holeySegments.push_back( SEG( holeyPoints[5], holeyPoints[6] ) );
+        holeySegments.push_back( SEG( holeyPoints[6], holeyPoints[7] ) );
+        holeySegments.push_back( SEG( holeyPoints[7], holeyPoints[8] ) );
+        holeySegments.push_back( SEG( holeyPoints[8], holeyPoints[4] ) );
+
+        // Triangle segments
+        holeySegments.push_back( SEG( holeyPoints[ 9], holeyPoints[10] ) );
+        holeySegments.push_back( SEG( holeyPoints[10], holeyPoints[11] ) );
+        holeySegments.push_back( SEG( holeyPoints[11], holeyPoints[9] ) );
+
+        // Auxiliary variables to store the contours that will be added to the polygons
         SHAPE_LINE_CHAIN polyLine, hole;
 
+        // Create a polygon set with a unique vertex
+        polyLine.Append( uniquePoints[0] );
+        polyLine.SetClosed( true );
+        uniqueVertexPolySet.AddOutline(polyLine);
+
+        // Create a polygon set without holes
+        solidPolySet.NewOutline();
+        solidPolySet.NewOutline();
+        solidPolySet.NewOutline();
+
+        // Create a polygon set with holes
+
         // Adds a new squared outline
-        polyLine.Append( 100,100 );
-        polyLine.Append( 0,100 );
-        polyLine.Append( 0,0 );
-        polyLine.Append( 100,0 );
+        polyLine.Clear();
+
+        for( int i = 0; i < 4; i++ )
+            polyLine.Append( holeyPoints[i] );
+
         polyLine.SetClosed( true );
 
-        polySet.AddOutline(polyLine);
+        holeyPolySet.AddOutline(polyLine);
 
         // Adds a new hole (a pentagon)
-        hole.Append( 10,10 );
-        hole.Append( 10,20 );
-        hole.Append( 15,15 );
-        hole.Append( 20,20 );
-        hole.Append( 20,10 );
-        hole.SetClosed( true );
-        polySet.AddHole( hole );
+        for( int i = 4; i < 9; i++ )
+            hole.Append( holeyPoints[i] );
 
-        hole.Clear();
+        hole.SetClosed( true );
+        holeyPolySet.AddHole( hole );
+
 
         // Adds a new hole (a triangle)
-        hole.Append( 40,10 );
-        hole.Append( 40,20 );
-        hole.Append( 60,10 );
+        hole.Clear();
+        for( int i = 9; i < 12; i++ )
+            hole.Append( holeyPoints[i] );
+
         hole.SetClosed( true );
-        polySet.AddHole( hole );
+        holeyPolySet.AddHole( hole );
     }
 
     ~CommonTestData(){}
@@ -79,36 +139,48 @@ struct CommonTestData
  * mehods.
  */
 struct ChamferFilletFixture {
-    // Polygon set common for all the tests
-    SHAPE_POLY_SET polySet;
+    // Structure to store the common data.
+    struct CommonTestData common;
 
-    // CPolyLine representing the same polygon in polySet;
+    // CPolyLine representing the same polygon in polySet.
     CPolyLine legacyPolyLine;
 
     ChamferFilletFixture()
     {
-        // Get a copy of the polySet
-        polySet = CommonTestData().polySet;
-
         // Replicate the vertices in the polySet outline
-        legacyPolyLine.Start( 0, 100, 100, CPolyLine::NO_HATCH );
-        legacyPolyLine.AppendCorner( 0,100 );
-        legacyPolyLine.AppendCorner( 0,0 );
-        legacyPolyLine.AppendCorner( 100,0 );
+        legacyPolyLine.Start( 0, common.holeyPoints[0].x, common.holeyPoints[0].y,
+                              CPolyLine::NO_HATCH );
+
+        for( int i = 1; i < 4; i++ )
+        {
+            VECTOR2I point = common.holeyPoints[i];
+            legacyPolyLine.AppendCorner( point.x, point.y );
+        }
+
         legacyPolyLine.CloseLastContour();
 
         // Add the non-convex pentagon hole
-        legacyPolyLine.Start( 1, 10, 10, CPolyLine::NO_HATCH );
-        legacyPolyLine.AppendCorner( 10,20 );
-        legacyPolyLine.AppendCorner( 15,15 );
-        legacyPolyLine.AppendCorner( 20,20 );
-        legacyPolyLine.AppendCorner( 20,10 );
+        legacyPolyLine.Start( 0, common.holeyPoints[4].x, common.holeyPoints[4].y,
+                              CPolyLine::NO_HATCH );
+
+        for( int i = 5; i < 9; i++ )
+        {
+            VECTOR2I point = common.holeyPoints[i];
+            legacyPolyLine.AppendCorner( point.x, point.y );
+        }
+
         legacyPolyLine.CloseLastContour();
 
         // Add the triangle hole
-        legacyPolyLine.Start( 1, 40, 10, CPolyLine::NO_HATCH );
-        legacyPolyLine.AppendCorner( 40,20 );
-        legacyPolyLine.AppendCorner( 60,10 );
+        legacyPolyLine.Start( 0, common.holeyPoints[9].x, common.holeyPoints[9].y,
+                              CPolyLine::NO_HATCH );
+
+        for( int i = 10; i < 12; i++ )
+        {
+            VECTOR2I point = common.holeyPoints[i];
+            legacyPolyLine.AppendCorner( point.x, point.y );
+        }
+
         legacyPolyLine.CloseLastContour();
     }
 
@@ -120,17 +192,14 @@ struct ChamferFilletFixture {
  * vector containing colliding and non-colliding points.
  */
  struct CollisionFixture {
-     // Polygon set common for all the tests
-     SHAPE_POLY_SET polySet;
+     // Structure to store the common data.
+     struct CommonTestData common;
 
      // Vectors containing colliding and non-colliding points
      std::vector<VECTOR2I> collidingPoints, nonCollidingPoints;
 
      CollisionFixture()
      {
-         // Get a copy of the polySet
-         polySet = CommonTestData().polySet;
-
          // CREATE POINTS NOT COLLIDING WITH THE POLY SET
 
          // Inside the polygon
@@ -162,25 +231,52 @@ struct ChamferFilletFixture {
   * vector containing colliding and non-colliding points.
   */
   struct IteratorFixture {
-      // Polygon set common for all the tests
-      SHAPE_POLY_SET polySet;
+      // Structure to store the common data.
+      struct CommonTestData common;
+
+      // Polygons to test whether the RemoveNullSegments method works
+      SHAPE_POLY_SET lastNullSegmentPolySet;
+      SHAPE_POLY_SET firstNullSegmentPolySet;
+      SHAPE_POLY_SET insideNullSegmentPolySet;
+
+      // Null segments points
+      std::vector<VECTOR2I> nullPoints;
 
       IteratorFixture()
       {
-          // Get a copy of the polySet
-          polySet = CommonTestData().polySet;
+          nullPoints.push_back( VECTOR2I( 100,100 ) );
+          nullPoints.push_back( VECTOR2I(   0,100 ) );
+          nullPoints.push_back( VECTOR2I(   0,  0 ) );
 
+          // Create a polygon with its last segment null
           SHAPE_LINE_CHAIN polyLine;
-
-          // Adds a new squared outline
-          polyLine.Append( 200,200 );
-          polyLine.Append( 500,500 );
-          polyLine.Append( 700,700 );
-          polyLine.Append( 700,700 );
+          polyLine.Append( nullPoints[0] );
+          polyLine.Append( nullPoints[1] );
+          polyLine.Append( nullPoints[2] );
+          polyLine.Append( nullPoints[2], true );
           polyLine.SetClosed( true );
 
-          polySet.AddOutline(polyLine);
+          lastNullSegmentPolySet.AddOutline(polyLine);
 
+          // Create a polygon with its first segment null
+          polyLine.Clear();
+          polyLine.Append( nullPoints[0] );
+          polyLine.Append( nullPoints[0], true );
+          polyLine.Append( nullPoints[1] );
+          polyLine.Append( nullPoints[2] );
+          polyLine.SetClosed( true );
+
+          firstNullSegmentPolySet.AddOutline(polyLine);
+
+          // Create a polygon with an inside segment null
+          polyLine.Clear();
+          polyLine.Append( nullPoints[0] );
+          polyLine.Append( nullPoints[1] );
+          polyLine.Append( nullPoints[1], true );
+          polyLine.Append( nullPoints[2] );
+          polyLine.SetClosed( true );
+
+          insideNullSegmentPolySet.AddOutline(polyLine);
       }
 
       ~IteratorFixture(){}

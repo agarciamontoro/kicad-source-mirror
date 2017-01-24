@@ -27,6 +27,6 @@
  */
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE "Polygon refactor module"
+#define BOOST_TEST_MODULE "CPolyLine -> SHAPE_POLY_SET refactor module"
 
 #include <boost/test/unit_test.hpp>

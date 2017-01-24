@@ -32,14 +32,14 @@
 #include <tests/fixtures.h>
 
 /**
- * Declares the previous struct as the boost test fixture.
+ * Declares the ChamferFilletFixture struct as the boost test fixture.
  */
 BOOST_FIXTURE_TEST_SUITE( ChamferFillet, ChamferFilletFixture )
 
 /**
  * Function lexicographicOrder
- * defines a lexicographic order between two VECTOR2I objects. Useful to std::sort
- * algorithm.
+ * defines a lexicographic order between two VECTOR2I objects. Used along with std::sort
+ * when checking that two polygons have the same vertices.
  * @param  i is a VECTOR2I object.
  * @param  j is a VECTOR2I object.
  * @return   bool - true if (i.x, i.y) < (j.x, j.y) using the lexicographic order,
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( Chamfer )
     // Test different distances, up to the half of the minimum segment longitude
     for (int distance = 0; distance < 5; distance++) {
         // Chamfered polygon to be tested.
-        actual = polySet.ChamferPolygon( distance, 0 );
+        actual = common.holeyPolySet.ChamferPolygon( distance, 0 );
 
         // Chamfered polygon assumed to be right.
         expected = *legacyPolyLine.Chamfer( distance );
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE( Fillet )
         for (size_t segments = 1; segments < 100; segments++)
         {
             // Chamfered polygon to be tested.
-            actual = polySet.FilletPolygon( radius, segments, 0 );
+            actual = common.holeyPolySet.FilletPolygon( radius, segments, 0 );
 
             // Chamfered polygon assumed to be right.
             expected = *legacyPolyLine.Fillet( radius, segments );

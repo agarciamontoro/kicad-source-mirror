@@ -30,7 +30,7 @@
 #include <tests/fixtures.h>
 
 /**
- * Declares the CommonTestData as the boost test suite fixture.
+ * Declares the IteratorFixture as the boost test suite fixture.
  */
 BOOST_FIXTURE_TEST_SUITE( PolygonIterator, IteratorFixture )
 
@@ -40,15 +40,12 @@ BOOST_FIXTURE_TEST_SUITE( PolygonIterator, IteratorFixture )
 BOOST_AUTO_TEST_CASE( VertexIterator )
 {
     SHAPE_POLY_SET::ITERATOR iterator;
+    int vertexIndex = 0;
 
-    for( iterator = polySet.IterateWithHoles(); iterator; iterator++ )
+    for( iterator = common.holeyPolySet.IterateWithHoles(); iterator; iterator++ )
     {
-        SHAPE_POLY_SET::VERTEX_INDEX index = iterator.GetIndex();
-
-        printf("V [%d, %d, %d] --> (%d, %d)\n", index.m_polygon, index.m_contour, index.m_vertex,
-                                                iterator->x, iterator->y);
-        if( iterator.IsEndContour() )
-            printf("------------------\n");
+        BOOST_CHECK_EQUAL( common.holeyPoints[vertexIndex], *iterator );
+        vertexIndex++;
     }
 }
 
@@ -58,12 +55,15 @@ BOOST_AUTO_TEST_CASE( VertexIterator )
 BOOST_AUTO_TEST_CASE( SegmentIterator )
 {
     SHAPE_POLY_SET::SEGMENT_ITERATOR iterator;
+    int segmentIndex = 0;
 
-    for( iterator = polySet.IterateSegmentsWithHoles(); iterator; iterator++ ){
-        SHAPE_POLY_SET::VERTEX_INDEX index = iterator.GetIndex();
+    for( iterator = common.holeyPolySet.IterateSegmentsWithHoles(); iterator; iterator++ ){
         SEG segment = *iterator;
 
-        printf("S [%d, %d, %d] --> (%d, %d) - (%d, %d)\n", index.m_polygon, index.m_contour, index.m_vertex, segment.A.x, segment.A.y, segment.B.x, segment.B.y);
+        BOOST_CHECK_EQUAL( common.holeySegments[segmentIndex].A, segment.A );
+        BOOST_CHECK_EQUAL( common.holeySegments[segmentIndex].B, segment.B );
+
+        segmentIndex++;
     }
 }
 
@@ -72,10 +72,9 @@ BOOST_AUTO_TEST_CASE( SegmentIterator )
  */
 BOOST_AUTO_TEST_CASE( EmptyPolygon )
 {
-    SHAPE_POLY_SET emptySet;
     SHAPE_POLY_SET::SEGMENT_ITERATOR iterator;
 
-    for( iterator = emptySet.IterateSegmentsWithHoles(); iterator; iterator++ )
+    for( iterator = common.emptyPolySet.IterateSegmentsWithHoles(); iterator; iterator++ )
     {
         BOOST_FAIL( "Empty set is being iterated!" );
     }
@@ -86,21 +85,12 @@ BOOST_AUTO_TEST_CASE( EmptyPolygon )
  */
 BOOST_AUTO_TEST_CASE( UniqueVertex )
 {
-    SHAPE_POLY_SET uniqueVertexSet;
-
-    SHAPE_LINE_CHAIN polyLine;
-
-    polyLine.Append( 100, 50 );
-    polyLine.SetClosed( true );
-    uniqueVertexSet.AddOutline(polyLine);
-
-    SHAPE_POLY_SET::SEGMENT_ITERATOR iterator = uniqueVertexSet.IterateSegmentsWithHoles();
+    SHAPE_POLY_SET::SEGMENT_ITERATOR iterator;
+    iterator = common.uniqueVertexPolySet.IterateSegmentsWithHoles();
 
     SEG segment = *iterator;
-    BOOST_CHECK( segment.A.x == 100 );
-    BOOST_CHECK( segment.B.x == 100 );
-    BOOST_CHECK( segment.A.y == 50  );
-    BOOST_CHECK( segment.B.y == 50  );
+    BOOST_CHECK_EQUAL( segment.A, common.uniquePoints[0] );
+    BOOST_CHECK_EQUAL( segment.B, common.uniquePoints[0] );
 
     iterator++;
 
@@ -112,83 +102,32 @@ BOOST_AUTO_TEST_CASE( UniqueVertex )
  */
 BOOST_AUTO_TEST_CASE( TotalVertices )
 {
-    SHAPE_POLY_SET emptySet;
-    BOOST_CHECK_EQUAL( emptySet.TotalVertices(), 0 );
-}
-
-/**
- *
- */
-BOOST_AUTO_TEST_CASE( RemoveLastNullSegment )
-{
-    SHAPE_POLY_SET polySet;
-    SHAPE_LINE_CHAIN polyLine, hole;
-
-    // Adds a new outline with a null segment
-    polyLine.Append( 100,100 );
-    polyLine.Append( 0,100 );
-    polyLine.Append( 0,0 );
-    polyLine.Append( 0,0,true );
-    polyLine.SetClosed( true );
-
-    polySet.AddOutline(polyLine);
-
-    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 4 );
-
-    BOOST_CHECK_EQUAL( polySet.RemoveNullSegments(), 1);
-
-    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 3 );
+    BOOST_CHECK_EQUAL( common.emptyPolySet.TotalVertices(), 0 );
+    BOOST_CHECK_EQUAL( common.uniqueVertexPolySet.TotalVertices(), 1 );
+    BOOST_CHECK_EQUAL( common.solidPolySet.TotalVertices(), 0 );
+    BOOST_CHECK_EQUAL( common.holeyPolySet.TotalVertices(), 12 );
 }
 
 
 /**
  *
  */
-BOOST_AUTO_TEST_CASE( RemoveFirstNullSegment )
+BOOST_AUTO_TEST_CASE( RemoveNullSegments )
 {
-    SHAPE_POLY_SET polySet;
-    SHAPE_LINE_CHAIN polyLine, hole;
+    SHAPE_POLY_SET polygonSets[3] = {lastNullSegmentPolySet,
+                                     firstNullSegmentPolySet,
+                                     insideNullSegmentPolySet};
 
-    // Adds a new outline with a null segment
-    polyLine.Append( 100,100 );
-    polyLine.Append( 100,100,true );
-    polyLine.Append( 0,0 );
-    polyLine.Append( 100,0 );
-    polyLine.SetClosed( true );
+    for(auto polygonSet : polygonSets)
+    {
+        BOOST_CHECK_EQUAL( polygonSet.TotalVertices(), 4 );
+        BOOST_CHECK_EQUAL( polygonSet.RemoveNullSegments(), 1);
+        BOOST_CHECK_EQUAL( polygonSet.TotalVertices(), 3 );
 
-    polySet.AddOutline(polyLine);
-
-    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 4 );
-
-    BOOST_CHECK_EQUAL( polySet.RemoveNullSegments(), 1);
-
-    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 3 );
-}
-
-
-
-/**
- *
- */
-BOOST_AUTO_TEST_CASE( RemoveInsideNullSegment )
-{
-    SHAPE_POLY_SET polySet;
-    SHAPE_LINE_CHAIN polyLine, hole;
-
-    // Adds a new outline with a null segment
-    polyLine.Append( 100,100 );
-    polyLine.Append( 0,100 );
-    polyLine.Append( 0,100,true );
-    polyLine.Append( 100,0 );
-    polyLine.SetClosed( true );
-
-    polySet.AddOutline(polyLine);
-
-    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 4 );
-
-    BOOST_CHECK_EQUAL( polySet.RemoveNullSegments(), 1);
-
-    BOOST_CHECK_EQUAL( polySet.TotalVertices(), 3 );
+        BOOST_CHECK_EQUAL( polygonSet.CVertex(0), nullPoints[0] );
+        BOOST_CHECK_EQUAL( polygonSet.CVertex(1), nullPoints[1] );
+        BOOST_CHECK_EQUAL( polygonSet.CVertex(2), nullPoints[2] );
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
