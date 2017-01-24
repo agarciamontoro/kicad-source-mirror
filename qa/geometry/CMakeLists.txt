@@ -24,7 +24,7 @@
 find_package(Boost COMPONENTS system filesystem unit_test_framework REQUIRED)
 find_package( wxWidgets 3.0.0 COMPONENTS gl aui adv html core net base xml stc REQUIRED )
 
-add_executable(MyTests
+add_executable(test_geometry
     test_module.cpp
     test_chamfer_fillet.cpp
     test_collision.cpp
@@ -38,7 +38,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/common/geometry
 )
 
-target_link_libraries(MyTests
+target_link_libraries(test_geometry
     ${CMAKE_BINARY_DIR}/polygon/libpolygon.a
     ${CMAKE_BINARY_DIR}/common/libcommon.a
     ${CMAKE_BINARY_DIR}/bitmaps_png/libbitmaps.a

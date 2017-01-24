@@ -29,7 +29,7 @@
 #include <polygon/PolyLine.h>
 #include <algorithm>
 
-#include <tests/test_fixtures.h>
+#include <qa/data/fixtures_geometry.h>
 
 /**
  * Declares the ChamferFilletFixture struct as the boost test fixture.
