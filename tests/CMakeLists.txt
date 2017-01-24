@@ -25,10 +25,10 @@ find_package(Boost COMPONENTS system filesystem unit_test_framework REQUIRED)
 find_package( wxWidgets 3.0.0 COMPONENTS gl aui adv html core net base xml stc REQUIRED )
 
 add_executable(MyTests
-    module.cpp
-    chamfer_fillet_test.cpp
-    collision_test.cpp
-    polygon_iterator.cpp
+    test_module.cpp
+    test_chamfer_fillet.cpp
+    test_collision.cpp
+    test_iterator.cpp
 )
 
 include_directories(

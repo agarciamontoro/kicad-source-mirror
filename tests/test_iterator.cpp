@@ -27,7 +27,7 @@
 #include <geometry/shape_poly_set.h>
 #include <geometry/shape_line_chain.h>
 
-#include <tests/fixtures.h>
+#include <tests/test_fixtures.h>
 
 /**
  * Declares the IteratorFixture as the boost test suite fixture.
@@ -35,7 +35,7 @@
 BOOST_FIXTURE_TEST_SUITE( PolygonIterator, IteratorFixture )
 
 /**
- *
+ * Checks whether the iteration on the vertices of a common polygon is correct.
  */
 BOOST_AUTO_TEST_CASE( VertexIterator )
 {
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE( VertexIterator )
 }
 
 /**
- *
+ * Checks whether the iteration on the segments of a common polygon is correct.
  */
 BOOST_AUTO_TEST_CASE( SegmentIterator )
 {
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE( SegmentIterator )
 }
 
 /**
- *
+ * Checks whether the iteration on the segments of an empty polygon is correct.
  */
 BOOST_AUTO_TEST_CASE( EmptyPolygon )
 {
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE( EmptyPolygon )
 }
 
 /**
- *
+ * Checks whether the iteration on the segments of a polygon with one vertex is correct.
  */
 BOOST_AUTO_TEST_CASE( UniqueVertex )
 {
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE( UniqueVertex )
 }
 
 /**
- *
+ * Checks whether the counting of the total number of vertices is correct.
  */
 BOOST_AUTO_TEST_CASE( TotalVertices )
 {
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( TotalVertices )
 
 
 /**
- *
+ * Checks whether the removal of null segments, wherever they are placed, is correct.
  */
 BOOST_AUTO_TEST_CASE( RemoveNullSegments )
 {

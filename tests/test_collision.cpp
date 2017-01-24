@@ -27,7 +27,7 @@
 #include <geometry/shape_poly_set.h>
 #include <geometry/shape_line_chain.h>
 
-#include <tests/fixtures.h>
+#include <tests/test_fixtures.h>
 
 /**
  * Declares the CollisionFixture as the boost test suite fixture.
