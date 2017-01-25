@@ -1692,6 +1692,8 @@ void SPECCTRA_DB::FromBOARD( BOARD* aBoard )
                     cutout->layer_id = layerIds[ kicadLayer2pcb[ item->GetLayer() ] ];
                 }
 
+                // If the point in this iteration is the last of the contour, the next iteration
+                // will start with a new contour.
                 isStartContour = iterator.IsEndContour();
 
                 wxASSERT( window );

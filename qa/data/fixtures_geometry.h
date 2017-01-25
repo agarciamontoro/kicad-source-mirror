@@ -30,8 +30,12 @@
 #include <polygon/PolyLine.h>
 
 /**
- * Common data for the tests: a polyset containing one single squared outline with two
- * holes: a non-convex pentagon and a triangle.
+ * Common data for the tests:
+ *      1. holeyPolySet: A polyset containing one single squared outline with two holes: a
+ *      non-convex pentagon and a triangle.
+ *      2.solidPolySet: A polyset with three empty outlines and no holes.
+ *      3. uniqueVertexPolySet: A polyset with one single outline that contains just one vertex.
+ *      4. emptyPolySet: A polyset with no outlines.
  */
 struct CommonTestData
 {
@@ -41,10 +45,14 @@ struct CommonTestData
     SHAPE_POLY_SET solidPolySet;
     SHAPE_POLY_SET holeyPolySet;
 
+    // Vectors containing the information with which the polygons are populated.
     std::vector<VECTOR2I> uniquePoints;
     std::vector<VECTOR2I> holeyPoints;
     std::vector<SEG> holeySegments;
 
+    /**
+     * Constructor.
+     */
     CommonTestData()
     {
         // UniqueVertexPolySet shall have a unique vertex
@@ -70,7 +78,7 @@ struct CommonTestData
         holeyPoints.push_back( VECTOR2I( 40,20 ) );
         holeyPoints.push_back( VECTOR2I( 60,10 ) );
 
-        // Square segments
+        // Save the segments of the holeyPolySet.
         holeySegments.push_back( SEG( holeyPoints[0], holeyPoints[1] ) );
         holeySegments.push_back( SEG( holeyPoints[1], holeyPoints[2] ) );
         holeySegments.push_back( SEG( holeyPoints[2], holeyPoints[3] ) );
@@ -134,9 +142,9 @@ struct CommonTestData
 };
 
 /**
- * Fixture for the ChamferFillet test suite. It contains a copy of the common polygon set and the
- * same polygon replicated as a CPolyLine to test behaviour of old and new Chamfer and Fillet
- * mehods.
+ * Fixture for the ChamferFillet test suite. It contains an instance of the common data and the
+ * holeyPolySet replicated as a CPolyLine, in order to test behaviour of old and new Chamfer and
+ * Fillet methods.
  */
 struct ChamferFilletFixture {
     // Structure to store the common data.
@@ -145,6 +153,9 @@ struct ChamferFilletFixture {
     // CPolyLine representing the same polygon in polySet.
     CPolyLine legacyPolyLine;
 
+    /**
+     * Constructor.
+     */
     ChamferFilletFixture()
     {
         // Replicate the vertices in the polySet outline
@@ -188,8 +199,8 @@ struct ChamferFilletFixture {
 };
 
 /**
- * Fixture for the Collision test suite. It contains a copy of the common polygon set and two
- * vector containing colliding and non-colliding points.
+ * Fixture for the Collision test suite. It contains an instance of the common data and two
+ * vectors containing colliding and non-colliding points.
  */
  struct CollisionFixture {
      // Structure to store the common data.
@@ -198,14 +209,17 @@ struct ChamferFilletFixture {
      // Vectors containing colliding and non-colliding points
      std::vector<VECTOR2I> collidingPoints, nonCollidingPoints;
 
+     /**
+      * Constructor
+      */
      CollisionFixture()
      {
-         // CREATE POINTS NOT COLLIDING WITH THE POLY SET
+         // Create points not colliding with the poly set.
 
          // Inside the polygon
          collidingPoints.push_back( VECTOR2I( 10,90 ) );
 
-         // Inside the polygon, but on a reentrant angle of a hole
+         // Inside the polygon, but on a re-entrant angle of a hole
          collidingPoints.push_back( VECTOR2I( 15,16 ) );
 
          // On a hole edge => inside the polygon
@@ -214,7 +228,7 @@ struct ChamferFilletFixture {
          // On the outline edge => inside the polygon
          collidingPoints.push_back( VECTOR2I( 0,10 ) );
 
-         // CREATE POINTS COLLIDING WITH THE POLY SET
+         // Create points colliding with the poly set.
 
          // Completely outside of the polygon
          nonCollidingPoints.push_back( VECTOR2I( 200,200 ) );
@@ -227,8 +241,7 @@ struct ChamferFilletFixture {
  };
 
  /**
-  * Fixture for the Iterator test suite. It contains a copy of the common polygon set and two
-  * vector containing colliding and non-colliding points.
+  * Fixture for the Iterator test suite. It contains an instance of the common data, three polysets with null segments and a vector containing their points.
   */
   struct IteratorFixture {
       // Structure to store the common data.

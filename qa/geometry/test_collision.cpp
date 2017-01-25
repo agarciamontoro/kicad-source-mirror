@@ -44,7 +44,8 @@ BOOST_AUTO_TEST_CASE( HasHoles )
 }
 
 /**
- *
+ * This test checks basic behaviour of PointOnEdge, testing if points on corners, outline edges
+ * and hole edges are detected as colliding.
  */
 BOOST_AUTO_TEST_CASE( PointOnEdge )
 {
@@ -56,6 +57,15 @@ BOOST_AUTO_TEST_CASE( PointOnEdge )
 
     // Check points on hole edges
     BOOST_CHECK( common.holeyPolySet.PointOnEdge( VECTOR2I( 10,11 ) ) );
+
+    // Check points inside a hole -> not in edge
+    BOOST_CHECK( !common.holeyPolySet.PointOnEdge( VECTOR2I( 12,12 ) ) );
+
+    // Check points inside the polygon and outside any hole -> not on edge
+    BOOST_CHECK( !common.holeyPolySet.PointOnEdge( VECTOR2I( 90,90 ) ) );
+
+    // Check points outside the polygon -> not on edge
+    BOOST_CHECK( !common.holeyPolySet.PointOnEdge( VECTOR2I( 200,200 ) ) );
 }
 
 /**
@@ -64,7 +74,7 @@ BOOST_AUTO_TEST_CASE( PointOnEdge )
  */
 BOOST_AUTO_TEST_CASE( pointInPolygonSet )
 {
-    // Check that the set contains the point that collide with it
+    // Check that the set contains the points that collide with it
     for( const VECTOR2I& point : collidingPoints )
     {
         BOOST_CHECK( common.holeyPolySet.Contains( point ) );
@@ -78,11 +88,11 @@ BOOST_AUTO_TEST_CASE( pointInPolygonSet )
 }
 
 /**
- * This test checks that the behaviour of the Collide (with a point) method works well.
+ * This test checks the behaviour of the Collide (with a point) method.
  */
 BOOST_AUTO_TEST_CASE( Collide )
 {
-    // When clearence = 0, the behaviour should be the same as with Contains
+    // When clearance = 0, the behaviour should be the same as with Contains
 
     // Check that the set collides with the colliding points
     for( const VECTOR2I& point : collidingPoints )
@@ -96,12 +106,12 @@ BOOST_AUTO_TEST_CASE( Collide )
         BOOST_CHECK( !common.holeyPolySet.Collide( point, 0 ) );
     }
 
-    // Checks with clearence > 0
+    // Checks with clearance > 0
 
-    // Point at the offseted zone outside of the outline => collision!
+    // Point at the offset zone outside of the outline => collision!
     BOOST_CHECK( common.holeyPolySet.Collide( VECTOR2I( -1,10 ), 5 ) );
 
-    // Point at the offseted zone outside of a hole => collision!
+    // Point at the offset zone outside of a hole => collision!
     BOOST_CHECK( common.holeyPolySet.Collide( VECTOR2I( 11,11 ), 5 ) );
 }
 

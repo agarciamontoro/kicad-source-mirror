@@ -65,7 +65,7 @@ bool lexicographicOrder( VECTOR2I i, VECTOR2I j )
 void TestLineChainEqualCPolyLine(SHAPE_LINE_CHAIN& lineChain, CPolyLine& polyLine,
                                  int contourIdx = 0)
 {
-    // Arrays to store the polygon points lexicrohapically ordered
+    // Arrays to store the polygon points lexicographically ordered
     std::vector<VECTOR2I> chainPoints;
     std::vector<VECTOR2I> polyPoints;
 

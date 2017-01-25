@@ -176,7 +176,7 @@ void PCB_POLYGON::AddToBoard()
         // add outline
         int outline_hatch = CPolyLine::DIAGONAL_EDGE;
 
-        for( i = 1; i < (int) m_outline.GetCount(); i++ )
+        for( i = 0; i < (int) m_outline.GetCount(); i++ )
         {
             zone->AppendCorner( wxPoint( KiROUND( m_outline[i]->x ),
                                          KiROUND( m_outline[i]->y ) ) );

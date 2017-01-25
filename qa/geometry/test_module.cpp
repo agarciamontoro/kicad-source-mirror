@@ -23,7 +23,7 @@
  */
 
 /**
- * Main file for the tests to be compiled
+ * Main file for the geometry tests to be compiled
  */
 
 #define BOOST_TEST_DYN_LINK

@@ -665,6 +665,8 @@ int PCB_EDIT_FRAME::Begin_Zone( wxDC* DC )
         zoneInfo.ExportSetting( *zone );
 
         zone->SetLayer( zoneInfo.m_CurrentZone_Layer );
+
+        // A duplicated corner is needed; null segments are removed when the zone is finished.
         zone->AppendCorner( GetCrossHairPosition() );
         zone->AppendCorner( GetCrossHairPosition(), true );
 
@@ -699,7 +701,7 @@ int PCB_EDIT_FRAME::Begin_Zone( wxDC* DC )
                 if( m_canvas->IsMouseCaptured() )
                     m_canvas->CallMouseCapture( DC, wxPoint(0,0), false );
 
-                // Is is necessary to allow duplication of the points, as we have to handle the
+                // It is necessary to allow duplication of the points, as we have to handle the
                 // continuous drawing while creating the zone at the same time as we build it. Null
                 // segments are removed when the zone is finished, in End_Zone.
                 zone->AppendCorner( GetCrossHairPosition(), true );

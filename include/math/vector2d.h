@@ -117,9 +117,9 @@ public:
     }
 
     /**
-     * Function operator(wxPoint)
+     * (wxPoint)
      * implements the cast to wxPoint.
-     * @return wxPoint - the vector casted to wxPoint.
+     * @return wxPoint - the vector cast to wxPoint.
      */
     explicit operator wxPoint() const
     {

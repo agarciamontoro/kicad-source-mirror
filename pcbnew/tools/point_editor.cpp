@@ -776,7 +776,7 @@ int POINT_EDITOR::addCorner( const TOOL_EVENT& aEvent )
 
         for( int i = 0; i < outline->TotalVertices() - 1; ++i )
         {
-            side = SEG( VECTOR2I( outline->Vertex( i ) ), VECTOR2I( outline->Vertex( i + 1 ) ) );
+            side = SEG( outline->Vertex( i ), outline->Vertex( i + 1 ) );
 
             unsigned int distance = side.Distance( cursorPos );
             if( distance < nearestDist )

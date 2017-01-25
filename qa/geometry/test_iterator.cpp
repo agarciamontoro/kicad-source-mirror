@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE( RemoveNullSegments )
                                      firstNullSegmentPolySet,
                                      insideNullSegmentPolySet};
 
-    for(auto polygonSet : polygonSets)
+    for(SHAPE_POLY_SET polygonSet : polygonSets)
     {
         BOOST_CHECK_EQUAL( polygonSet.TotalVertices(), 4 );
         BOOST_CHECK_EQUAL( polygonSet.RemoveNullSegments(), 1);
