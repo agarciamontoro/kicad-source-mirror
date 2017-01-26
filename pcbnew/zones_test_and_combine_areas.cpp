@@ -199,6 +199,7 @@ bool BOARD::TestAreaIntersection( ZONE_CONTAINER* area_ref, ZONE_CONTAINER* area
     if( ! b1.Intersects( b2 ) )
         return false;
 
+    // now test for intersecting segments
     SHAPE_POLY_SET::SEGMENT_ITERATOR segIterator1, segIterator2;
 
     // Iterate through all the vertices
@@ -218,8 +219,8 @@ bool BOARD::TestAreaIntersection( ZONE_CONTAINER* area_ref, ZONE_CONTAINER* area
         }
     }
 
-    // If a contour is inside an other contour, no segments intersects, but the zones
-    // can be combined if a corner is inside an outline (only one corner is enought)
+    // If a contour is inside another contour, no segments intersects, but the zones
+    // can be combined if a corner is inside an outline (only one corner is enough)
     for( SHAPE_POLY_SET::ITERATOR iter = poly2->IterateWithHoles(); iter; iter++ )
     {
         if( poly1->Contains( *iter ) )
@@ -324,10 +325,13 @@ int BOARD::Test_Drc_Areas_Outlines_To_Areas_Outlines( ZONE_CONTAINER* aArea_To_E
             if( Area_Ref->GetIsKeepout() )
                 zone2zoneClearance = 1;
 
+            // Object to iterate through the polygon vertices
+            SHAPE_POLY_SET::ITERATOR iterator;
+
             // test for some corners of Area_Ref inside area_to_test
-            for( int ic = 0; ic < refSmoothedPoly->TotalVertices(); ic++ )
+            for( iterator = refSmoothedPoly->IterateWithHoles(); iterator; iterator++ )
             {
-                VECTOR2I currentVertex = refSmoothedPoly->Vertex( ic );
+                VECTOR2I currentVertex = *iterator;
 
                 if( testSmoothedPoly->Contains( currentVertex ) )
                 {
@@ -351,9 +355,9 @@ int BOARD::Test_Drc_Areas_Outlines_To_Areas_Outlines( ZONE_CONTAINER* aArea_To_E
             }
 
             // test for some corners of area_to_test inside Area_Ref
-            for( int ic2 = 0; ic2 < testSmoothedPoly->TotalVertices(); ic2++ )
+            for( iterator = testSmoothedPoly->IterateWithHoles(); iterator; iterator++ )
             {
-                VECTOR2I currentVertex = testSmoothedPoly->Vertex( ic2 );
+                VECTOR2I currentVertex = *iterator;
 
                 if( refSmoothedPoly->Contains( currentVertex ) )
                 {
@@ -377,40 +381,34 @@ int BOARD::Test_Drc_Areas_Outlines_To_Areas_Outlines( ZONE_CONTAINER* aArea_To_E
             }
 
 
-            // Define an iterator to visit all edges in the test polygon.
-            SHAPE_POLY_SET::SEGMENT_ITERATOR testIterator, refIterator;
+            // Define an iterator to visit all edges in the polygons.
+            SHAPE_POLY_SET::SEGMENT_ITERATOR testIt, refIt;
 
-            testIterator = testSmoothedPoly->IterateSegmentsWithHoles();
-
-            // Iterate through all the vertices
-            for( ; testIterator; testIterator++ )
+            // Iterate through all the segments of refSmoothedPoly
+            for( refIt = refSmoothedPoly->IterateSegmentsWithHoles(); refIt; refIt++ )
             {
-                // Build segment
-                SEG testSegment = *testIterator;
+                // Build ref segment
+                SEG refSegment = *refIt;
 
-                // Define an iterator to visit deges on ref polygon.
-                refIterator = refSmoothedPoly->IterateSegmentsWithHoles();
-
-                // Iterate through all the vertices
-                for( ; refIterator; refIterator++ )
+                // Iterate through all the segments in testSmoothedPoly
+                for( testIt = testSmoothedPoly->IterateSegmentsWithHoles(); testIt; testIt++ )
                 {
-
-                    // Build second segment
-                    SEG refSegment = *refIterator;
+                    // Build test segment
+                    SEG testSegment = *testIt;
 
                     int x, y;
 
                     int ax1, ay1, ax2, ay2;
-                    ax1 = testSegment.A.x;
-                    ay1 = testSegment.A.y;
-                    ax2 = testSegment.B.x;
-                    ay2 = testSegment.B.y;
+                    ax1 = refSegment.A.x;
+                    ay1 = refSegment.A.y;
+                    ax2 = refSegment.B.x;
+                    ay2 = refSegment.B.y;
 
                     int bx1, by1, bx2, by2;
-                    bx1 = refSegment.A.x;
-                    by1 = refSegment.A.y;
-                    bx2 = refSegment.B.x;
-                    by2 = refSegment.B.y;
+                    bx1 = testSegment.A.x;
+                    by1 = testSegment.A.y;
+                    bx2 = testSegment.B.x;
+                    by2 = testSegment.B.y;
 
                     int d = GetClearanceBetweenSegments( bx1, by1, bx2, by2,
                                                          0,
@@ -509,12 +507,9 @@ bool DRC::doEdgeZoneDrc( ZONE_CONTAINER* aArea, int aCornerIndex )
         int ax2    = end.x;
         int ay2    = end.y;
 
-        // Define an iterator to visit all edges in the polygon.
+        // Iterate through all edges in the polygon.
         SHAPE_POLY_SET::SEGMENT_ITERATOR iterator;
-        iterator = area_to_test->Outline()->IterateSegmentsWithHoles();
-
-        // Iterate through all the holes
-        for( ; iterator; iterator++ )
+        for( iterator = area_to_test->Outline()->IterateSegmentsWithHoles(); iterator; iterator++ )
         {
             SEG segment = *iterator;
 
