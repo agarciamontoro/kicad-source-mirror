@@ -2317,8 +2317,10 @@ TRACK* BOARD::CreateLockPoint( wxPoint& aPosition, TRACK* aSegment, PICKED_ITEMS
 ZONE_CONTAINER* BOARD::AddArea( PICKED_ITEMS_LIST* aNewZonesList, int aNetcode,
                                 LAYER_ID aLayer, wxPoint aStartPointPosition, int aHatch )
 {
-    ZONE_CONTAINER* new_area = InsertArea( aNetcode, m_ZoneDescriptorList.size( ) - 1, aLayer,
-                                           aStartPointPosition.x, aStartPointPosition.y, aHatch );
+    ZONE_CONTAINER* new_area = InsertArea( aNetcode,
+                                           m_ZoneDescriptorList.size( ) - 1,
+                                           aLayer, aStartPointPosition.x,
+                                           aStartPointPosition.y, aHatch );
 
     if( aNewZonesList )
     {
@@ -2355,14 +2357,15 @@ ZONE_CONTAINER* BOARD::InsertArea( int netcode, int iarea, LAYER_ID layer, int x
     new_area->SetNetCode( netcode );
     new_area->SetLayer( layer );
     new_area->SetTimeStamp( GetNewTimeStamp() );
-    new_area->SetHatchStyle( (ZONE_CONTAINER::HATCH_STYLE) hatch );
-    new_area->AppendCorner( wxPoint( x, y ) );
 
     if( iarea < (int) ( m_ZoneDescriptorList.size() - 1 ) )
         m_ZoneDescriptorList.insert( m_ZoneDescriptorList.begin() + iarea + 1, new_area );
     else
         m_ZoneDescriptorList.push_back( new_area );
 
+    new_area->SetHatchStyle( (ZONE_CONTAINER::HATCH_STYLE) hatch );
+    new_area->AppendCorner( wxPoint( x, y ) );
+    
     return new_area;
 }
 
