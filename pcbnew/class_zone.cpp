@@ -48,13 +48,11 @@
 #include <math_for_graphics.h>
 #include <polygon_test_point_inside.h>
 
-#include <chrono>
-
 
 ZONE_CONTAINER::ZONE_CONTAINER( BOARD* aBoard ) :
     BOARD_CONNECTED_ITEM( aBoard, PCB_ZONE_AREA_T )
 {
-    m_CornerSelection = nullptr;
+    m_CornerSelection = nullptr;                // no corner is selected
     m_IsFilled = false;                         // fill status : true when the zone is filled
     m_FillMode = 0;                             // How to fill areas: 0 = use filled polygons, != 0 fill with segments
     m_priority = 0;
@@ -80,7 +78,7 @@ ZONE_CONTAINER::ZONE_CONTAINER( const ZONE_CONTAINER& aZone ) :
     SetNetCode( aZone.GetNetCode() );
     m_Poly = new SHAPE_POLY_SET( *aZone.m_Poly );
 
-    // For corner moving, corner index to drag, or -1 if no selection
+    // For corner moving, corner index to drag, or nullptr if no selection
     m_CornerSelection = nullptr;
     m_IsFilled = aZone.m_IsFilled;
     m_ZoneClearance = aZone.m_ZoneClearance;     // clearance value
@@ -128,7 +126,7 @@ ZONE_CONTAINER& ZONE_CONTAINER::operator=( const ZONE_CONTAINER& aOther )
     m_ThermalReliefCopperBridge = aOther.m_ThermalReliefCopperBridge;
     SetHatchStyle( aOther.GetHatchStyle() );
     SetHatchPitch( aOther.GetHatchPitch() );
-    m_HatchLines = aOther.m_HatchLines;     // copy vector <CSegment>
+    m_HatchLines = aOther.m_HatchLines;     // copy vector <SEG>
     m_FilledPolysList.RemoveAllContours();
     m_FilledPolysList.Append( aOther.m_FilledPolysList );
     m_FillSegmList.clear();
@@ -169,6 +167,9 @@ const wxPoint& ZONE_CONTAINER::GetPosition() const
 {
     const WX_VECTOR_CONVERTER* pos;
 
+    // The retrieved vertex is a VECTOR2I. Casting it to a union WX_VECTOR_CONVERTER, we can later
+    // return the object shaped as a wxPoint. See the definition of the union in class_zone.h for
+    // more information on this hack.
     pos = reinterpret_cast<const WX_VECTOR_CONVERTER*>( &GetCornerPosition( 0 ) );
     return pos->wx;
 }
@@ -487,16 +488,13 @@ bool ZONE_CONTAINER::HitTest( const wxPoint& aPosition ) const
 {
     if( HitTestForCorner( aPosition ) )
         return true;
-
-    if( HitTestForEdge( aPosition ) )
-        return true;
-
-    return false;
+    else
+        return HitTestForEdge( aPosition );
 }
 
 void ZONE_CONTAINER::SetSelectedCorner( const wxPoint& aPosition )
 {
-    if( !m_CornerSelection )
+    if( m_CornerSelection == nullptr )
         m_CornerSelection = new SHAPE_POLY_SET::VERTEX_INDEX;
 
     if( !HitTestForCorner( aPosition, *m_CornerSelection ))
@@ -518,6 +516,7 @@ bool ZONE_CONTAINER::HitTestForCorner( const wxPoint& refPos,
     return m_Poly->CollideVertex( VECTOR2I(refPos), aCornerHit, distmax );
 }
 
+
 bool ZONE_CONTAINER::HitTestForCorner( const wxPoint& refPos ) const
 {
     SHAPE_POLY_SET::VERTEX_INDEX dummy;
@@ -533,12 +532,12 @@ bool ZONE_CONTAINER::HitTestForEdge( const wxPoint& refPos,
     return m_Poly->CollideEdge( VECTOR2I(refPos), aCornerHit, distmax );
 }
 
+
 bool ZONE_CONTAINER::HitTestForEdge( const wxPoint& refPos ) const
 {
     SHAPE_POLY_SET::VERTEX_INDEX dummy;
     return HitTestForEdge( refPos, dummy );
 }
-
 
 
 bool ZONE_CONTAINER::HitTest( const EDA_RECT& aRect, bool aContained, int aAccuracy ) const
@@ -718,7 +717,7 @@ void ZONE_CONTAINER::GetMsgPanelInfo( std::vector< MSG_PANEL_ITEM >& aList )
 void ZONE_CONTAINER::Move( const wxPoint& offset )
 {
     /* move outlines */
-    m_Poly->Move( VECTOR2I( offset.x, offset.y ) );
+    m_Poly->Move( VECTOR2I( offset ) );
 
     Hatch();
 
@@ -884,6 +883,7 @@ int ZONE_CONTAINER::GetHatchPitch() const
     return m_hatchPitch;
 }
 
+
 void ZONE_CONTAINER::SetHatch( int aHatchStyle, int aHatchPitch, bool aRebuildHatch )
 {
     SetHatchPitch( aHatchPitch );
@@ -893,15 +893,18 @@ void ZONE_CONTAINER::SetHatch( int aHatchStyle, int aHatchPitch, bool aRebuildHa
         Hatch();
 }
 
-void ZONE_CONTAINER::SetHatchPitch( int pitch )
+
+void ZONE_CONTAINER::SetHatchPitch( int aPitch )
 {
-    m_hatchPitch = pitch;
+    m_hatchPitch = aPitch;
 }
+
 
 void ZONE_CONTAINER::UnHatch()
 {
     m_HatchLines.clear();
 }
+
 
 // Creates hatch lines inside the outline of the complex polygon
 // sort function used in ::Hatch to sort points by descending wxPoint.x values
@@ -918,7 +921,7 @@ void ZONE_CONTAINER::Hatch()
     if( m_hatchStyle == NO_HATCH || m_hatchPitch == 0 || m_Poly->IsEmpty() )
         return;
 
-    // if( !GetClosed() ) // If not closed, the poly is beeing created and not finalised. Not not hatch
+    // if( !GetClosed() ) // If not closed, the poly is being created and not finalised. Not not hatch
     //     return;
 
     // define range for hatch lines
@@ -979,7 +982,7 @@ void ZONE_CONTAINER::Hatch()
 
     // loop through hatch lines
     #define MAXPTS 200      // Usually we store only few values per one hatch line
-                            // depending on the compexity of the zone outline
+                            // depending on the complexity of the zone outline
 
     static std::vector<VECTOR2I> pointbuffer;
     pointbuffer.clear();
@@ -1048,7 +1051,7 @@ void ZONE_CONTAINER::Hatch()
             int dx = pointbuffer[ip + 1].x - pointbuffer[ip].x;
 
             // Push only one line for diagonal hatch,
-            // or for small lines < twice the line len
+            // or for small lines < twice the line length
             // else push 2 small lines
             if( m_hatchStyle == DIAGONAL_FULL || fabs( dx ) < 2 * hatch_line_len )
             {

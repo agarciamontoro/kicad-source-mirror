@@ -219,13 +219,6 @@ int SHAPE_POLY_SET::VertexCount( int aOutline , int aHole  ) const
     return m_polys[aOutline][idx].PointCount();
 }
 
-int SHAPE_POLY_SET::HoleCount( int aOutline ) const
-{
-    if( (aOutline > (int)m_polys.size()) || (m_polys[aOutline].size() < 2) )
-        return 0;
-
-    return m_polys[aOutline].size() - 1;
-}
 
 SHAPE_POLY_SET SHAPE_POLY_SET::Subset( int aFirstPolygon, int aLastPolygon )
 {

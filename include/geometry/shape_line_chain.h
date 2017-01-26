@@ -413,8 +413,8 @@ public:
     /**
      * Function Remove()
      *
-     * Removes the the aIndex-th point from the line chain.
-     * @param aIndex is the idnex of the opint to be removed.
+     * Removes the aIndex-th point from the line chain.
+     * @param aIndex is the index of the point to be removed.
      */
     void Remove( int aIndex )
     {

@@ -893,9 +893,9 @@ void PCB_PAINTER::draw( const ZONE_CONTAINER* aZone )
     m_gal->SetIsStroke( true );
     m_gal->SetLineWidth( m_pcbSettings.m_outlineWidth );
 
-    SHAPE_POLY_SET::ITERATOR iterator;
+    SHAPE_POLY_SET::CONST_ITERATOR iterator;
 
-    for( iterator = aZone->IterateWithHoles(); iterator; iterator++ )
+    for( iterator = aZone->CIterateWithHoles(); iterator; iterator++ )
     {
         corners.push_back( VECTOR2D( *iterator ) );
 

@@ -61,14 +61,13 @@ class SHAPE_POLY_SET : public SHAPE
          * Struct VERTEX_INDEX
          *
          * Structure to hold the necessary information in order to index a vertex on a
-         * SHAPE_POLY_SET object:
-         * the polygon index, the contour index relative to the polygon and the vertex index
-         * relative the contour.
+         * SHAPE_POLY_SET object: the polygon index, the contour index relative to the polygon and
+         * the vertex index relative the contour.
          */
         typedef struct{
-            int m_polygon;   /*!< aPolygon is the index of the polygon. */
-            int m_contour;   /*!< aContour is the index of the contour relative to the polygon. */
-            int m_vertex;    /*!< aVertex is the index of the vertex relative to the contour. */
+            int m_polygon;   /*!< m_polygon is the index of the polygon. */
+            int m_contour;   /*!< m_contour is the index of the contour relative to the polygon. */
+            int m_vertex;    /*!< m_vertex is the index of the vertex relative to the contour. */
         } VERTEX_INDEX;
 
         /**
@@ -83,7 +82,8 @@ class SHAPE_POLY_SET : public SHAPE
 
             /**
              * Function IsEndContour.
-             * @return True if the current vertex is the last one of the current contour (outline or hole).
+             * @return bool - true if the current vertex is the last one of the current contour
+             *              (outline or hole); false otherwise.
              */
             bool IsEndContour() const
             {
@@ -92,7 +92,7 @@ class SHAPE_POLY_SET : public SHAPE
 
             /**
              * Function IsLastOutline.
-             * @return True if the current outline is the last one.
+             * @return bool - true if the current outline is the last one; false otherwise.
              */
             bool IsLastPolygon() const
             {
@@ -105,9 +105,8 @@ class SHAPE_POLY_SET : public SHAPE
             }
 
             /**
-             * Function Advance.
-             *
-             * Advance the indices of the current vertex/outline/contour, checking whether the
+             * Function Advance
+             * advances the indices of the current vertex/outline/contour, checking whether the
              * vertices in the holes have to be iterated through
              */
             void Advance()
@@ -159,7 +158,7 @@ class SHAPE_POLY_SET : public SHAPE
 
             T& Get()
             {
-                return m_poly->Polygon(m_currentPolygon)[m_currentContour].Point(m_currentVertex);
+                return m_poly->Polygon( m_currentPolygon )[m_currentContour].Point( m_currentVertex );
             }
 
             T& operator*()
@@ -172,6 +171,11 @@ class SHAPE_POLY_SET : public SHAPE
                 return &Get();
             }
 
+            /**
+             * Function GetIndex
+             * @return VERTEX_INDEX - returns the indices of the current polygon, contour and
+             *                      vertex.
+             */
             VERTEX_INDEX GetIndex()
             {
                 VERTEX_INDEX index;
@@ -196,7 +200,7 @@ class SHAPE_POLY_SET : public SHAPE
         };
 
         /**
-         * Class ITERATOR_TEMPLATE
+         * Class SEGMENT_ITERATOR_TEMPLATE
          *
          * Base class for iterating over all segments in a given SHAPE_POLY_SET.
          */
@@ -206,7 +210,7 @@ class SHAPE_POLY_SET : public SHAPE
         public:
             /**
              * Function IsLastOutline.
-             * @return True if the current outline is the last one.
+             * @return bool - true if the current outline is the last one.
              */
             bool IsLastPolygon() const
             {
@@ -219,9 +223,8 @@ class SHAPE_POLY_SET : public SHAPE
             }
 
             /**
-             * Function Advance.
-             *
-             * Advance the indices of the current vertex/outline/contour, checking whether the
+             * Function Advance
+             * advances the indices of the current vertex/outline/contour, checking whether the
              * vertices in the holes have to be iterated through
              */
             void Advance()
@@ -273,7 +276,7 @@ class SHAPE_POLY_SET : public SHAPE
 
             T Get()
             {
-                return m_poly->Polygon(m_currentPolygon)[m_currentContour].Segment(m_currentSegment);
+                return m_poly->Polygon( m_currentPolygon )[m_currentContour].Segment( m_currentSegment );
             }
 
             T operator*()
@@ -281,6 +284,11 @@ class SHAPE_POLY_SET : public SHAPE
                 return Get();
             }
 
+            /**
+             * Function GetIndex
+             * @return VERTEX_INDEX - returns the indices of the current polygon, contour and
+             *                      vertex.
+             */
             VERTEX_INDEX GetIndex()
             {
                 VERTEX_INDEX index;
@@ -291,7 +299,6 @@ class SHAPE_POLY_SET : public SHAPE
 
                 return index;
             }
-
 
         private:
             friend class SHAPE_POLY_SET;
@@ -304,9 +311,11 @@ class SHAPE_POLY_SET : public SHAPE
             bool m_iterateHoles;
         };
 
+        // Iterator and const iterator types to visit polygon's points.
         typedef ITERATOR_TEMPLATE<VECTOR2I> ITERATOR;
         typedef ITERATOR_TEMPLATE<const VECTOR2I> CONST_ITERATOR;
 
+        // Iterator and const iterator types to visit polygon's edges.
         typedef SEGMENT_ITERATOR_TEMPLATE<SEG> SEGMENT_ITERATOR;
         typedef SEGMENT_ITERATOR_TEMPLATE<const SEG> CONST_SEGMENT_ITERATOR;
 
@@ -330,7 +339,7 @@ class SHAPE_POLY_SET : public SHAPE
          * @param  aGlobalIdx  is the global index of the corner whose structured index wants to
          *                     be found
          * @param  aPolygonIdx is the index of the polygon in which the expected vertex is.
-         * @param  aContourIdx is the index of the contour in the aPolygonIdx-th poylgon in which
+         * @param  aContourIdx is the index of the contour in the aPolygonIdx-th polygon in which
          *                     the expected vertex is.
          * @param  aVertexIdx  is the index of the vertex in the aContourIdx-th contour in which
          *                     the expected vertex is.
@@ -338,6 +347,15 @@ class SHAPE_POLY_SET : public SHAPE
          */
         bool GetRelativeIndices( int aGlobalIdx, VERTEX_INDEX* aRelativeIndices);
 
+        /**
+         * Function GetGlobalIndex
+         * computes the global index of a vertex from the relative indices of polygon, contour and
+         * vertex.
+         * @param  aRelativeIndices is the set of relative indices.
+         * @param  aGlobalIdx       [out] is the computed global index.
+         * @return bool - true if the relative indices are correct; false otherwise. The cmoputed
+         *              global index is returned in the \p aGlobalIdx reference.
+         */
         bool GetGlobalIndex( VERTEX_INDEX aRelativeIndices, int& aGlobalIdx );
 
         /// @copydoc SHAPE::Clone()
@@ -349,13 +367,25 @@ class SHAPE_POLY_SET : public SHAPE
         ///> Creates a new hole in a given outline
         int NewHole( int aOutline = -1 );
 
-        ///> Adds a new outline to the set and returns its index
+        ///> Adds a new outline to the set and returns its indexs
         int AddOutline( const SHAPE_LINE_CHAIN& aOutline );
 
         ///> Adds a new hole to the given outline (default: last) and returns its index
         int AddHole( const SHAPE_LINE_CHAIN& aHole, int aOutline = -1 );
 
         ///> Appends a vertex at the end of the given outline/hole (default: the last outline)
+        /**
+         * Function Append
+         * adds a new vertex to the contour indexed by \p aOutline and \p aHole (defaults to the
+         * outline of the last polygon).
+         * @param  x                 is the x coordinate of the new vertex.
+         * @param  y                 is the y coordinate of the new vertex.
+         * @param  aOutline          is the index of the polygon.
+         * @param  aHole             is the index of the hole (-1 for the main outline),
+         * @param  aAllowDuplication is a flag to indicate whether it is allowed to add this
+         *                           corner even if it is duplicated.
+         * @return int - the number of corners of the selected contour after the addition.
+         */
         int Append( int x, int y, int aOutline = -1, int aHole = -1,
                     bool aAllowDuplication = false );
 
@@ -367,7 +397,7 @@ class SHAPE_POLY_SET : public SHAPE
 
         /**
          * Function InsertVertex
-         * Adds a vertex in teh globally indexed position aGlobalIndex.
+         * Adds a vertex in the globally indexed position aGlobalIndex.
          * @param aGlobalIndex is the global index of the position in which teh new vertex will be
          *                     inserted.
          * @param aNewVertex   is the new inserted vertex.
@@ -388,12 +418,12 @@ class SHAPE_POLY_SET : public SHAPE
 
         /**
          * Function Edge
-         * Returns a reference to the aGlobalIndex-th segment in the poylgon set. Modifying the
-         * points in the returned object, the corresponding vertices on the polygon set will be
-         * modified
-         * @param  aGlobalIndex is index of the edge, globally indexed betweel all edges in all
+         * Returns a reference to the aGlobalIndex-th segment in the polygon set. Modifying the
+         * points in the returned object will modify the corresponding vertices on the polygon set.
+         * @param  aGlobalIndex is index of the edge, globally indexed between all edges in all
          *                      contours
-         * @return a reference to the aGlobalIndex-th index.
+         * @return SEG - the aGlobalIndex-th segment, whose points are references to the polygon
+         *             points.
          */
         SEG Edge( int aGlobalIndex );;
 
@@ -403,14 +433,14 @@ class SHAPE_POLY_SET : public SHAPE
          * Checks whether the aPolygonIndex-th polygon in the set is self intersecting.
          * @param  aPolygonIndex index of the polygon that wants to be checked.
          * @return bool - true if the aPolygonIndex-th polygon is self intersecting, false
-         * otherwise.
+         *              otherwise.
          */
         bool IsPolygonSelfIntersecting( int aPolygonIndex );
 
         /**
          * Function IsSelfIntersecting
          * Checks whether any of the polygons in the set is self intersecting.
-         * @return bool - true if any polygon is self intersecting, false otherwise.
+         * @return bool - true if any of the polygons is self intersecting, false otherwise.
          */
         bool IsSelfIntersecting();
 
@@ -421,7 +451,12 @@ class SHAPE_POLY_SET : public SHAPE
         int VertexCount( int aOutline = -1, int aHole = -1 ) const;
 
         ///> Returns the number of holes in a given outline
-        int HoleCount( int aOutline ) const;
+        int HoleCount( int aOutline ) const
+        {
+            if( (aOutline > (int)m_polys.size()) || (m_polys[aOutline].size() < 2) )
+                return 0;
+            return m_polys[aOutline].size() - 1;
+        }
 
         ///> Returns the reference to aIndex-th outline in the set
         SHAPE_LINE_CHAIN& Outline( int aIndex )
@@ -463,8 +498,16 @@ class SHAPE_POLY_SET : public SHAPE
             return m_polys[aIndex];
         }
 
-        ///> Returns an iterator object, for iterating between aFirst and aLast outline, with or
-        /// without holes (default: without)
+        /**
+         * Function Iterate
+         * returns an object to iterate through the points of the polygons between \p aFirst and
+         * \p aLast.
+         * @param  aFirst        is the first polygon whose points will be iterated.
+         * @param  aLast         is the last polygon whose points will be iterated.
+         * @param  aIterateHoles is a flag to indicate whether the points of the holes should be
+         *                       iterated.
+         * @return ITERATOR - the iterator object.
+         */
         ITERATOR Iterate( int aFirst, int aLast, bool aIterateHoles = false )
         {
             ITERATOR iter;
@@ -479,25 +522,43 @@ class SHAPE_POLY_SET : public SHAPE
             return iter;
         }
 
-        ///> Returns an iterator object, for iterating aOutline-th outline
+        /**
+         * Function Iterate
+         * @param  aOutline the index of the polygon to be iterated.
+         * @return ITERATOR - an iterator object to visit all points in the main outline of the
+         *                  aOutline-th polygon, without visiting the points in the holes.
+         */
         ITERATOR Iterate( int aOutline )
         {
             return Iterate( aOutline, aOutline );
         }
 
-        ///> Returns an iterator object, for iterating aOutline-th outline
+        /**
+         * Function IterateWithHoles
+         * @param  aOutline the index of the polygon to be iterated.
+         * @return ITERATOR - an iterator object to visit all points in the main outline of the
+         *                  aOutline-th polygon, visiting also the points in the holes.
+         */
         ITERATOR IterateWithHoles( int aOutline )
         {
             return Iterate( aOutline, aOutline, true );
         }
 
-        ///> Returns an iterator object, for all outlines in the set (no holes)
+        /**
+         * Function Iterate
+         * @return ITERATOR - an iterator object to visit all points in all outlines of the set,
+         *                  without visiting the points in the holes.
+         */
         ITERATOR Iterate()
         {
             return Iterate( 0, OutlineCount() - 1 );
         }
 
-        ///> Returns an iterator object, for all outlines in the set (with holes)
+        /**
+         * Function IterateWithHoles
+         * @return ITERATOR - an iterator object to visit all points in all outlines of the set,
+         *                  visiting also the points in the holes.
+         */
         ITERATOR IterateWithHoles()
         {
             return Iterate( 0, OutlineCount() - 1, true );
@@ -583,7 +644,6 @@ class SHAPE_POLY_SET : public SHAPE
         {
             return IterateSegments( 0, OutlineCount() - 1 );
         }
-
 
         ///> Returns an iterator object, for all outlines in the set (with holes)
         SEGMENT_ITERATOR IterateSegmentsWithHoles()

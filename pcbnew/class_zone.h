@@ -220,7 +220,7 @@ public:
 
     void SetSelectedCorner( int aCorner )
     {
-        if( !m_CornerSelection )
+        if( m_CornerSelection == nullptr )
             m_CornerSelection = new SHAPE_POLY_SET::VERTEX_INDEX;
 
         // Convert global to relative indices
@@ -259,7 +259,7 @@ public:
      */
     bool HitTestInsideZone( const wxPoint& aPosition ) const
     {
-        return m_Poly->Contains( VECTOR2I( aPosition.x, aPosition.y ), 0 );
+        return m_Poly->Contains( VECTOR2I( aPosition ), 0 );
     }
 
     /**
@@ -346,9 +346,18 @@ public:
      * @param  refPos     is the wxPoint to test.
      * @param  aCornerHit [out] is the index of the closest vertex found, useless when return
      *                    value is false.
-     * @return true if some corner was found to be closer to refPos than aClearance.
+     * @return true if some corner was found to be closer to refPos than aClearance; false
+     *              otherwise.
      */
     bool HitTestForCorner( const wxPoint& refPos, SHAPE_POLY_SET::VERTEX_INDEX& aCornerHit ) const;
+
+    /**
+     * Function HitTestForCorner
+     * tests if the given wxPoint is near a corner.
+     * @param  refPos     is the wxPoint to test.
+     * @return true if some corner was found to be closer to refPos than aClearance; false
+     *              otherwise.
+     */
     bool HitTestForCorner( const wxPoint& refPos ) const;
 
     /**
@@ -360,6 +369,13 @@ public:
      * @return true if some edge was found to be closer to refPos than aClearance.
      */
     bool HitTestForEdge( const wxPoint& refPos, SHAPE_POLY_SET::VERTEX_INDEX& aCornerHit ) const;
+
+    /**
+     * Function HitTestForEdge
+     * tests if the given wxPoint is near a segment defined by 2 corners.
+     * @param  refPos     is the wxPoint to test.
+     * @return true if some edge was found to be closer to refPos than aClearance.
+     */
     bool HitTestForEdge( const wxPoint& refPos ) const;
 
     /** @copydoc BOARD_ITEM::HitTest(const EDA_RECT& aRect,
@@ -445,20 +461,34 @@ public:
         return m_Poly->TotalVertices();
     }
 
+    /**
+     * Function Iterate
+     * returns an iterator to visit all points of the zone's main outline without holes.
+     * @return SHAPE_POLY_SET::ITERATOR - an iterator to visit the zone vertices without holes.
+     */
     SHAPE_POLY_SET::ITERATOR Iterate()
     {
         return m_Poly->Iterate();
     }
 
-
+    /**
+     * Function IterateWithHoles
+     * returns an iterator to visit all points of the zone's main outline with holes.
+     * @return SHAPE_POLY_SET::ITERATOR - an iterator to visit the zone vertices with holes.
+     */
     SHAPE_POLY_SET::ITERATOR IterateWithHoles()
     {
         return m_Poly->IterateWithHoles();
     }
 
-    SHAPE_POLY_SET::ITERATOR IterateWithHoles() const
+    /**
+     * Function IterateWithHoles
+     * returns an iterator to visit all points of the zone's main outline with holes.
+     * @return SHAPE_POLY_SET::ITERATOR - an iterator to visit the zone vertices with holes.
+     */
+    SHAPE_POLY_SET::CONST_ITERATOR CIterateWithHoles() const
     {
-        return m_Poly->IterateWithHoles();
+        return m_Poly->CIterateWithHoles();
     }
 
     void RemoveAllContours( void )
@@ -487,11 +517,21 @@ public:
         m_Poly->Vertex( relativeIndices ).y = new_pos.y;
     }
 
+    /**
+     * Function NewHole
+     * creates a new hole on the zone; i.e., a new contour on the zone's outline.
+     */
     void NewHole()
     {
         m_Poly->NewHole();
     }
 
+    /**
+     * Function AppendCorner
+     * @param position          is the position of the new corner.
+     * @param aAllowDuplication is a flag to indicate whether it is allowed to add this corner
+     *                          even if it is duplicated.
+     */
     void AppendCorner( wxPoint position, bool aAllowDuplication = false )
     {
         if( m_Poly->OutlineCount() == 0 )
@@ -603,12 +643,51 @@ public:
     /**
      * Hatch related methods
      */
-     int    GetHatchPitch() const;
-     static int GetDefaultHatchPitchMils() { return 20; } // FIXME: Ugly hardcoded value
-     void   SetHatch( int aHatchStyle, int aHatchPitch, bool aRebuildHatch );
-     void   SetHatchPitch( int pitch );
-     void   UnHatch();
-     void   Hatch();
+
+    /**
+     * Function GetHatchPitch
+     * @return int - the zone hatch pitch in iu.
+     */
+    int GetHatchPitch() const;
+
+    /**
+     * Function GetDefaultHatchPitchMils
+     * @return int - the default hatch pitch in mils.
+     *
+     * \todo This value is hardcoded, but it should be user configurable.
+     */
+    static int GetDefaultHatchPitchMils() { return 20; }
+
+    /**
+     * Function SetHatch
+     * sets all hatch parameters for the zone.
+     * @param  aHatchStyle   is the style of the hatch, specified as one of HATCH_STYLE possible
+     *                       values.
+     * @param  aHatchPitch   is the hatch pitch in iu.
+     * @param  aRebuildHatch is a flag to indicate whether to re-hatch after having set the
+     *                       previous parameters
+     */
+    void SetHatch( int aHatchStyle, int aHatchPitch, bool aRebuildHatch );
+
+    /**
+     * Function SetHatchPitch
+     * sets the hatch pitch parameter for the zone.
+     * @param  aPitch is the hatch pitch in iu.
+     */
+    void SetHatchPitch( int aPitch );
+
+    /**
+     * Function UnHatch
+     * clears the zone's hatch.
+     */
+    void   UnHatch();
+
+    /**
+     * Function Hatch
+     * computes the hatch lines depending on the hatch parameters and stores it in the zone's
+     * attribute m_HatchLines.
+     */
+    void   Hatch();
 
 
 #if defined(DEBUG)
@@ -664,8 +743,8 @@ private:
     /// How to fill areas: 0 => use filled polygons, 1 => fill with segments.
     int                   m_FillMode;
 
-    /// The index of the corner being moved or null if no corner is selected.
-    SHAPE_POLY_SET::VERTEX_INDEX*                   m_CornerSelection;
+    /// The index of the corner being moved or nullptr if no corner is selected.
+    SHAPE_POLY_SET::VERTEX_INDEX* m_CornerSelection;
 
     /// Variable used in polygon calculations.
     int                   m_localFlgs;
@@ -692,13 +771,13 @@ private:
     /**
      * Union to handle conversion between references to wxPoint and to VECTOR2I.
      *
-     * The function GetPosition(), that returns a
-     * reference to a wxPoint, needs some existing wxPoint object that it can point to. The header
-     * of this function cannot be changed, as it overrides the function from the base class
-     * BOARD_ITEM. This made sense when ZONE_CONTAINER was implemented using the legacy CPolyLine
-     * class, that worked with wxPoints. However, m_Poly is a SHAPE_POLY_SET, whose corners are
-     * objects of type VECTOR2I, not wxPoint. Thus, we cannot directly reference the first corner
-     * of m_Poly, so a modified version of it that can be read as a wxPoint needs to be handled.
+     * The function GetPosition(), that returns a reference to a wxPoint, needs some existing
+     * wxPoint object that it can point to. The header of this function cannot be changed, as it
+     * overrides the function from the base class BOARD_ITEM. This made sense when ZONE_CONTAINER
+     * was implemented using the legacy CPolyLine class, that worked with wxPoints. However,
+     * m_Poly is now a SHAPE_POLY_SET, whose corners are objects of type VECTOR2I, not wxPoint.
+     * Thus, we cannot directly reference the first corner of m_Poly, so a modified version of it
+     * that can be read as a wxPoint needs to be handled.
      * Taking advantage of the fact that both wxPoint and VECTOR2I have the same memory layout
      * (two integers: x, y), this union let us convert a reference to a VECTOR2I into a reference
      * to a wxPoint.
@@ -706,7 +785,7 @@ private:
      * The idea is the following: in GetPosition(), m_Poly->GetCornerPosition( 0 ) returns a
      * reference to the first corner of the polygon set. If we retrieve its memory direction, we
      * can tell the compiler to cast that pointer to a WX_VECTOR_CONVERTER pointer. We can finally
-     * shape that memory layout as a wxPoint picknig the wx member of the union.
+     * shape that memory layout as a wxPoint picking the wx member of the union.
      *
      * Although this solution is somewhat unstable, as it relies on the fact that the memory
      * layout is exactly the same, it is the best attempt to keep backwards compatibility while
@@ -718,9 +797,10 @@ private:
     } WX_VECTOR_CONVERTER;
 
     // Sanity check: assure that the conversion VECTOR2I->wxPoint using the previous union is
-    // sensible
+    // correct, making sure that the access for x and y attributes is still safe.
     static_assert(offsetof(wxPoint,x) == offsetof(VECTOR2I,x),
                   "wxPoint::x and VECTOR2I::x have different offsets");
+
     static_assert(offsetof(wxPoint,y) == offsetof(VECTOR2I,y),
                   "wxPoint::y and VECTOR2I::y have different offsets");
 
