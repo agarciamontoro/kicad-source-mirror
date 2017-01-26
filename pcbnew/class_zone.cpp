@@ -836,8 +836,9 @@ wxString ZONE_CONTAINER::GetSelectMenuText() const
     BOARD* board = GetBoard();
 
     // Check whether the selected contour is a hole (contour index > 0)
-    if( m_CornerSelection->m_contour )
-        text << wxT( " " ) << _( "(Cutout)" );
+    if( m_CornerSelection != nullptr )
+        if( m_CornerSelection->m_contour > 0 )
+            text << wxT( " " ) << _( "(Cutout)" );
 
     if( GetIsKeepout() )
         text << wxT( " " ) << _( "(Keepout)" );
