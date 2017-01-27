@@ -87,6 +87,7 @@ set( PCBNEW_DIALOGS
     dialogs/dialog_global_modules_fields_edition.cpp
     dialogs/dialog_global_modules_fields_edition_base.cpp
     dialogs/dialog_global_pads_edition_base.cpp
+    dialogs/dialog_global_pads_edition.cpp
     dialogs/dialog_graphic_items_options.cpp
     dialogs/dialog_graphic_items_options_base.cpp
     dialogs/dialog_graphic_item_properties.cpp
@@ -288,10 +289,11 @@ set( PCBNEW_CLASS_SRCS
     tools/edit_tool.cpp
     tools/pcbnew_control.cpp
     tools/pcb_editor_control.cpp
-    tools/module_tools.cpp
+    tools/module_editor_tools.cpp
     tools/placement_tool.cpp
     tools/common_actions.cpp
     tools/grid_helper.cpp
+    tools/pad_tool.cpp
     tools/picker_tool.cpp
     tools/zoom_tool.cpp
     tools/tools_common.cpp
