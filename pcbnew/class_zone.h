@@ -220,11 +220,16 @@ public:
 
     void SetSelectedCorner( int aCorner )
     {
-        if( m_CornerSelection == nullptr )
-            m_CornerSelection = new SHAPE_POLY_SET::VERTEX_INDEX;
+        SHAPE_POLY_SET::VERTEX_INDEX selectedCorner;
 
-        // Convert global to relative indices
-        assert( m_Poly->GetRelativeIndices( aCorner, m_CornerSelection ) );
+        // If the global index of the corner is correct, assign it to m_CornerSelection
+        if( m_Poly->GetRelativeIndices( aCorner, m_CornerSelection ) )
+        {
+            if( m_CornerSelection == nullptr )
+                m_CornerSelection = new SHAPE_POLY_SET::VERTEX_INDEX;
+
+            *m_CornerSelection = selectedCorner;
+        }
     }
 
     ///
@@ -482,7 +487,7 @@ public:
     }
 
     /**
-     * Function IterateWithHoles
+     * Function CIterateWithHoles
      * returns an iterator to visit all points of the zone's main outline with holes.
      * @return SHAPE_POLY_SET::ITERATOR - an iterator to visit the zone vertices with holes.
      */
