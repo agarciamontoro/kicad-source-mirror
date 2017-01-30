@@ -64,10 +64,14 @@ class SHAPE_POLY_SET : public SHAPE
          * SHAPE_POLY_SET object: the polygon index, the contour index relative to the polygon and
          * the vertex index relative the contour.
          */
-        typedef struct{
+        typedef struct VERTEX_INDEX{
             int m_polygon;   /*!< m_polygon is the index of the polygon. */
             int m_contour;   /*!< m_contour is the index of the contour relative to the polygon. */
             int m_vertex;    /*!< m_vertex is the index of the vertex relative to the contour. */
+
+            VERTEX_INDEX() : m_polygon(-1), m_contour(-1), m_vertex(-1)
+            {
+            }
         } VERTEX_INDEX;
 
         /**

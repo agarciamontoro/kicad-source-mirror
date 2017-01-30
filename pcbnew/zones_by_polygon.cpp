@@ -945,7 +945,7 @@ void PCB_EDIT_FRAME::Delete_Zone_Contour( wxDC* DC, ZONE_CONTAINER* aZone )
     SHAPE_POLY_SET::VERTEX_INDEX indices;
 
     // If the selected corner does not exist, abort
-    assert( !aZone->Outline()->GetRelativeIndices( aZone->GetSelectedCorner(), &indices ) );
+    assert( aZone->Outline()->GetRelativeIndices( aZone->GetSelectedCorner(), &indices ) );
 
     EDA_RECT dirty = aZone->GetBoundingBox();
 

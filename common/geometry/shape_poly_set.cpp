@@ -68,27 +68,25 @@ bool SHAPE_POLY_SET::GetRelativeIndices( int aGlobalIdx, SHAPE_POLY_SET::VERTEX_
 
     int currentGlobalIdx = 0;
 
-    bool found = false;
-
     for( polygonIdx = 0; polygonIdx < OutlineCount(); polygonIdx++ )
     {
         POLYGON currentPolygon = Polygon( polygonIdx );
 
-        for( contourIdx = 0; contourIdx < currentPolygon.size() && !found; contourIdx++ )
+        for( contourIdx = 0; contourIdx < currentPolygon.size(); contourIdx++ )
         {
             SHAPE_LINE_CHAIN currentContour = currentPolygon[contourIdx];
             int totalPoints = currentContour.PointCount();
 
-            for( vertexIdx = 0; vertexIdx < totalPoints && !found; vertexIdx++ )
+            for( vertexIdx = 0; vertexIdx < totalPoints; vertexIdx++ )
             {
                 // Check if the current vertex is the globally indexed as aGlobalIdx
                 if( currentGlobalIdx == aGlobalIdx )
                 {
-                    found = true;
-
                     aRelativeIndices->m_polygon = polygonIdx;
                     aRelativeIndices->m_contour = contourIdx;
                     aRelativeIndices->m_vertex  = vertexIdx;
+
+                    return true;
                 }
 
                 // Advance
@@ -97,7 +95,7 @@ bool SHAPE_POLY_SET::GetRelativeIndices( int aGlobalIdx, SHAPE_POLY_SET::VERTEX_
         }
     }
 
-    return found;
+    return false;
 }
 
 bool SHAPE_POLY_SET::GetGlobalIndex( SHAPE_POLY_SET::VERTEX_INDEX aRelativeIndices,

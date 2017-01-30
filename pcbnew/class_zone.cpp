@@ -486,20 +486,21 @@ void ZONE_CONTAINER::SetCornerRadius( unsigned int aRadius )
 
 bool ZONE_CONTAINER::HitTest( const wxPoint& aPosition ) const
 {
-    if( HitTestForCorner( aPosition ) )
-        return true;
-    else
-        return HitTestForEdge( aPosition );
+    return HitTestForCorner( aPosition ) || HitTestForEdge( aPosition );
 }
+
 
 void ZONE_CONTAINER::SetSelectedCorner( const wxPoint& aPosition )
 {
-    if( m_CornerSelection == nullptr )
-        m_CornerSelection = new SHAPE_POLY_SET::VERTEX_INDEX;
+    SHAPE_POLY_SET::VERTEX_INDEX corner;
 
-    if( !HitTestForCorner( aPosition, *m_CornerSelection ))
+    // If there is some corner to be selected, assign it to m_CornerSelection
+    if( HitTestForCorner( aPosition, corner ) || HitTestForEdge( aPosition, corner ) )
     {
-        HitTestForEdge( aPosition, *m_CornerSelection );
+        if( m_CornerSelection == nullptr )
+            m_CornerSelection = new SHAPE_POLY_SET::VERTEX_INDEX;
+
+        *m_CornerSelection = corner;
     }
 }
 
@@ -638,8 +639,7 @@ void ZONE_CONTAINER::GetMsgPanelInfo( std::vector< MSG_PANEL_ITEM >& aList )
     // Display Cutout instead of Outline for holes inside a zone
     // i.e. when num contour !=0
     // Check whether the selected corner is in a hole; i.e., in any contour but the first one.
-    if( m_CornerSelection != nullptr )
-      if( m_CornerSelection->m_contour > 0 )
+    if( m_CornerSelection != nullptr && m_CornerSelection->m_contour > 0 )
         msg << wxT( " " ) << _( "(Cutout)" );
 
     aList.push_back( MSG_PANEL_ITEM( _( "Type" ), msg, DARKCYAN ) );
@@ -835,8 +835,7 @@ wxString ZONE_CONTAINER::GetSelectMenuText() const
     BOARD* board = GetBoard();
 
     // Check whether the selected contour is a hole (contour index > 0)
-    if( m_CornerSelection != nullptr )
-        if( m_CornerSelection->m_contour > 0 )
+    if( m_CornerSelection != nullptr &&  m_CornerSelection->m_contour > 0 )
             text << wxT( " " ) << _( "(Cutout)" );
 
     if( GetIsKeepout() )
