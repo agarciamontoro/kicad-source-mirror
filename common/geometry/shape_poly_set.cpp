@@ -45,6 +45,7 @@ SHAPE_POLY_SET::SHAPE_POLY_SET() :
 {
 }
 
+
 SHAPE_POLY_SET::SHAPE_POLY_SET( const SHAPE_POLY_SET& aOther ) :
     SHAPE( SH_POLY_SET ), m_polys( aOther.m_polys )
 {
@@ -55,10 +56,12 @@ SHAPE_POLY_SET::~SHAPE_POLY_SET()
 {
 }
 
+
 SHAPE* SHAPE_POLY_SET::Clone() const
 {
     return new SHAPE_POLY_SET( *this );
 }
+
 
 bool SHAPE_POLY_SET::GetRelativeIndices( int aGlobalIdx, SHAPE_POLY_SET::VERTEX_INDEX* aRelativeIndices )
 {
@@ -97,6 +100,7 @@ bool SHAPE_POLY_SET::GetRelativeIndices( int aGlobalIdx, SHAPE_POLY_SET::VERTEX_
 
     return false;
 }
+
 
 bool SHAPE_POLY_SET::GetGlobalIndex( SHAPE_POLY_SET::VERTEX_INDEX aRelativeIndices,
                                      int& aGlobalIdx )
@@ -188,6 +192,7 @@ int SHAPE_POLY_SET::Append( int x, int y, int aOutline, int aHole, bool aAllowDu
     return m_polys[aOutline][idx].PointCount();
 }
 
+
 void SHAPE_POLY_SET::InsertVertex( int aGlobalIndex, VECTOR2I aNewVertex )
 {
     VERTEX_INDEX index;
@@ -232,6 +237,7 @@ SHAPE_POLY_SET SHAPE_POLY_SET::Subset( int aFirstPolygon, int aLastPolygon )
     return newPolySet;
 }
 
+
 VECTOR2I& SHAPE_POLY_SET::Vertex( int index, int aOutline , int aHole )
 {
     if( aOutline < 0 )
@@ -249,6 +255,7 @@ VECTOR2I& SHAPE_POLY_SET::Vertex( int index, int aOutline , int aHole )
 
     return m_polys[aOutline][idx].Point( index );
 }
+
 
 const VECTOR2I& SHAPE_POLY_SET::CVertex( int index, int aOutline , int aHole ) const
 {
@@ -268,13 +275,16 @@ const VECTOR2I& SHAPE_POLY_SET::CVertex( int index, int aOutline , int aHole ) c
     return m_polys[aOutline][idx].CPoint( index );
 }
 
+
 VECTOR2I& SHAPE_POLY_SET::Vertex( SHAPE_POLY_SET::VERTEX_INDEX index ){
     return Vertex( index.m_vertex, index.m_polygon, index.m_contour - 1 );
 }
 
+
 const VECTOR2I& SHAPE_POLY_SET::CVertex( SHAPE_POLY_SET::VERTEX_INDEX index ) const{
     return CVertex( index.m_vertex, index.m_polygon, index.m_contour - 1 );
 }
+
 
 SEG SHAPE_POLY_SET::Edge( int aGlobalIndex )
 {
@@ -285,6 +295,7 @@ SEG SHAPE_POLY_SET::Edge( int aGlobalIndex )
 
     return m_polys[indices.m_polygon][indices.m_contour].Segment(indices.m_vertex);
 }
+
 
 bool SHAPE_POLY_SET::IsPolygonSelfIntersecting( int aPolygonIndex )
 {
@@ -314,6 +325,7 @@ bool SHAPE_POLY_SET::IsPolygonSelfIntersecting( int aPolygonIndex )
     return false;
 }
 
+
 bool SHAPE_POLY_SET::IsSelfIntersecting()
 {
     for( unsigned int polygon = 0; polygon < m_polys.size(); polygon++ )
@@ -324,6 +336,7 @@ bool SHAPE_POLY_SET::IsSelfIntersecting()
 
     return false;
 }
+
 
 int SHAPE_POLY_SET::AddOutline( const SHAPE_LINE_CHAIN& aOutline )
 {
@@ -382,6 +395,7 @@ const SHAPE_LINE_CHAIN SHAPE_POLY_SET::convertFromClipper( const Path& aPath )
 
     return lc;
 }
+
 
 void SHAPE_POLY_SET::booleanOp( ClipType aType, const SHAPE_POLY_SET& aOtherShape,
                                 POLYGON_MODE aFastMode )
@@ -586,6 +600,7 @@ struct FractureEdge
 
 typedef std::vector<FractureEdge*> FractureEdgeSet;
 
+
 static int processEdge( FractureEdgeSet& edges, FractureEdge* edge )
 {
     int x = edge->m_p1.x;
@@ -652,6 +667,7 @@ static int processEdge( FractureEdgeSet& edges, FractureEdge* edge )
 
     return 0;
 }
+
 
 void SHAPE_POLY_SET::fractureSingle( POLYGON& paths )
 {
@@ -779,12 +795,14 @@ bool SHAPE_POLY_SET::HasHoles() const
     return false;
 }
 
+
 void SHAPE_POLY_SET::Simplify( POLYGON_MODE aFastMode )
 {
     SHAPE_POLY_SET empty;
 
     booleanOp( ctUnion, empty, aFastMode );
 }
+
 
 int SHAPE_POLY_SET::NormalizeAreaOutlines()
 {
@@ -912,6 +930,7 @@ const BOX2I SHAPE_POLY_SET::BBox( int aClearance ) const
     return bb;
 }
 
+
 bool SHAPE_POLY_SET::PointOnEdge( const VECTOR2I& aP ) const
 {
     // Iterate through all the polygons in the set
@@ -927,6 +946,7 @@ bool SHAPE_POLY_SET::PointOnEdge( const VECTOR2I& aP ) const
 
     return false;
 }
+
 
 bool SHAPE_POLY_SET::Collide( const VECTOR2I& aP, int aClearance ) const
 {
@@ -948,6 +968,7 @@ void SHAPE_POLY_SET::RemoveAllContours()
     m_polys.clear();
 }
 
+
 void SHAPE_POLY_SET::RemoveContour( int aContourIdx, int aPolygonIdx )
 {
     // Default polygon is the last one
@@ -958,6 +979,7 @@ void SHAPE_POLY_SET::RemoveContour( int aContourIdx, int aPolygonIdx )
 
     polygon.erase( polygon.begin() + aContourIdx );
 }
+
 
 int SHAPE_POLY_SET::RemoveNullSegments()
 {
@@ -1028,6 +1050,7 @@ void SHAPE_POLY_SET::Append( const VECTOR2I& aP, int aOutline, int aHole )
     Append( aP.x, aP.y, aOutline, aHole );
 }
 
+
 bool SHAPE_POLY_SET::CollideVertex( const VECTOR2I& aPoint, SHAPE_POLY_SET::VERTEX_INDEX& aClosestVertex,
                                    int aClearance )
 {
@@ -1095,6 +1118,7 @@ bool SHAPE_POLY_SET::CollideEdge( const VECTOR2I& aPoint,
 
     return collision;
 }
+
 
 bool SHAPE_POLY_SET::Contains( const VECTOR2I& aP, int aSubpolyIndex ) const
 {
@@ -1261,6 +1285,7 @@ SHAPE_POLY_SET::POLYGON SHAPE_POLY_SET::FilletPolygon( unsigned int aRadius,
 {
     return chamferFilletPolygon(CORNER_MODE::FILLETED, aRadius, aIndex, aSegments );
 }
+
 
 int SHAPE_POLY_SET::DistanceToPolygon( VECTOR2I aPoint, int aPolygonIndex )
 {
