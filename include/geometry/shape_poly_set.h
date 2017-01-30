@@ -235,13 +235,16 @@ class SHAPE_POLY_SET : public SHAPE
             {
                 // Advance vertex index
                 m_currentSegment++;
+                int last;
 
                 // Check whether the user wants to iterate through the vertices of the holes
                 // and behave accordingly
                 if( m_iterateHoles )
                 {
+                    last = m_poly->CPolygon( m_currentPolygon )[m_currentContour].SegmentCount();
+
                     // If the last vertex of the contour was reached, advance the contour index
-                    if( m_currentSegment >= m_poly->CPolygon( m_currentPolygon )[m_currentContour].SegmentCount() )
+                    if( m_currentSegment >= last )
                     {
                         m_currentSegment = 0;
                         m_currentContour++;
@@ -259,8 +262,10 @@ class SHAPE_POLY_SET : public SHAPE
                 }
                 else
                 {
-                    // If the last vertex of the outline was reached, advance to the following polygon
-                    if( m_currentSegment >= m_poly->CPolygon( m_currentPolygon )[0].SegmentCount() )
+                    last = _poly->CPolygon( m_currentPolygon )[0].SegmentCount();
+                    // If the last vertex of the outline was reached, advance to the following
+                    // polygon
+                    if( m_currentSegment >= last )
                     {
                         m_currentSegment = 0;
                         m_currentPolygon++;
@@ -280,7 +285,8 @@ class SHAPE_POLY_SET : public SHAPE
 
             T Get()
             {
-                return m_poly->Polygon( m_currentPolygon )[m_currentContour].Segment( m_currentSegment );
+                POLYGON poly = m_poly->Polygon( m_currentPolygon );
+                return poly[m_currentContour].Segment( m_currentSegment );;
             }
 
             T operator*()
@@ -796,8 +802,8 @@ class SHAPE_POLY_SET : public SHAPE
         bool CollideEdge( const VECTOR2I& aPoint, VERTEX_INDEX& aClosestVertex,
                 int aClearance = 0 );
 
-        ///> Returns true if a given subpolygon contains the point aP. If aSubpolyIndex < 0 (default value),
-        ///> checks all polygons in the set
+        ///> Returns true if a given subpolygon contains the point aP. If aSubpolyIndex < 0
+        ///> (default value), checks all polygons in the set
         bool Contains( const VECTOR2I& aP, int aSubpolyIndex = -1 ) const;
 
         ///> Returns true if the set is empty (no polygons at all)

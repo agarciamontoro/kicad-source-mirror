@@ -115,4 +115,5 @@ BOOST_AUTO_TEST_CASE( Collide )
     BOOST_CHECK( common.holeyPolySet.Collide( VECTOR2I( 11,11 ), 5 ) );
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()

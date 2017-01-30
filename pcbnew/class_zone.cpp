@@ -213,7 +213,7 @@ void ZONE_CONTAINER::Draw( EDA_DRAW_PANEL* panel, wxDC* DC, GR_DRAWMODE aDrawMod
     // Object to iterate through the segments of the outline
     SHAPE_POLY_SET::SEGMENT_ITERATOR iterator;
 
-    for( iterator = m_Poly->IterateSegments(); iterator; iterator++)
+    for( iterator = m_Poly->IterateSegments(); iterator; iterator++ )
     {
         // Create the segment
         SEG segment = *iterator;
@@ -919,9 +919,6 @@ void ZONE_CONTAINER::Hatch()
 
     if( m_hatchStyle == NO_HATCH || m_hatchPitch == 0 || m_Poly->IsEmpty() )
         return;
-
-    // if( !GetClosed() ) // If not closed, the poly is being created and not finalised. Not not hatch
-    //     return;
 
     // define range for hatch lines
     int min_x   = m_Poly->Vertex(0).x;

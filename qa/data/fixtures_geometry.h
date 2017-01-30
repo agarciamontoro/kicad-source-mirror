@@ -202,97 +202,97 @@ struct ChamferFilletFixture {
  * Fixture for the Collision test suite. It contains an instance of the common data and two
  * vectors containing colliding and non-colliding points.
  */
- struct CollisionFixture {
-     // Structure to store the common data.
-     struct CommonTestData common;
+struct CollisionFixture {
+    // Structure to store the common data.
+    struct CommonTestData common;
 
-     // Vectors containing colliding and non-colliding points
-     std::vector<VECTOR2I> collidingPoints, nonCollidingPoints;
+    // Vectors containing colliding and non-colliding points
+    std::vector<VECTOR2I> collidingPoints, nonCollidingPoints;
 
-     /**
-      * Constructor
-      */
-     CollisionFixture()
-     {
-         // Create points not colliding with the poly set.
+    /**
+    * Constructor
+    */
+    CollisionFixture()
+    {
+        // Create points not colliding with the poly set.
 
-         // Inside the polygon
-         collidingPoints.push_back( VECTOR2I( 10,90 ) );
+        // Inside the polygon
+        collidingPoints.push_back( VECTOR2I( 10,90 ) );
 
-         // Inside the polygon, but on a re-entrant angle of a hole
-         collidingPoints.push_back( VECTOR2I( 15,16 ) );
+        // Inside the polygon, but on a re-entrant angle of a hole
+        collidingPoints.push_back( VECTOR2I( 15,16 ) );
 
-         // On a hole edge => inside the polygon
-         collidingPoints.push_back( VECTOR2I( 40,25 ) );
+        // On a hole edge => inside the polygon
+        collidingPoints.push_back( VECTOR2I( 40,25 ) );
 
-         // On the outline edge => inside the polygon
-         collidingPoints.push_back( VECTOR2I( 0,10 ) );
+        // On the outline edge => inside the polygon
+        collidingPoints.push_back( VECTOR2I( 0,10 ) );
 
-         // Create points colliding with the poly set.
+        // Create points colliding with the poly set.
 
-         // Completely outside of the polygon
-         nonCollidingPoints.push_back( VECTOR2I( 200,200 ) );
+        // Completely outside of the polygon
+        nonCollidingPoints.push_back( VECTOR2I( 200,200 ) );
 
-         // Inside the outline and inside a hole => outside the polygon
-         nonCollidingPoints.push_back( VECTOR2I( 15,12 ) );
-     }
+        // Inside the outline and inside a hole => outside the polygon
+        nonCollidingPoints.push_back( VECTOR2I( 15,12 ) );
+    }
 
-     ~CollisionFixture(){}
- };
+    ~CollisionFixture(){}
+};
 
- /**
-  * Fixture for the Iterator test suite. It contains an instance of the common data, three polysets with null segments and a vector containing their points.
-  */
-  struct IteratorFixture {
-      // Structure to store the common data.
-      struct CommonTestData common;
+/**
+* Fixture for the Iterator test suite. It contains an instance of the common data, three polysets with null segments and a vector containing their points.
+*/
+struct IteratorFixture {
+    // Structure to store the common data.
+    struct CommonTestData common;
 
-      // Polygons to test whether the RemoveNullSegments method works
-      SHAPE_POLY_SET lastNullSegmentPolySet;
-      SHAPE_POLY_SET firstNullSegmentPolySet;
-      SHAPE_POLY_SET insideNullSegmentPolySet;
+    // Polygons to test whether the RemoveNullSegments method works
+    SHAPE_POLY_SET lastNullSegmentPolySet;
+    SHAPE_POLY_SET firstNullSegmentPolySet;
+    SHAPE_POLY_SET insideNullSegmentPolySet;
 
-      // Null segments points
-      std::vector<VECTOR2I> nullPoints;
+    // Null segments points
+    std::vector<VECTOR2I> nullPoints;
 
-      IteratorFixture()
-      {
-          nullPoints.push_back( VECTOR2I( 100,100 ) );
-          nullPoints.push_back( VECTOR2I(   0,100 ) );
-          nullPoints.push_back( VECTOR2I(   0,  0 ) );
+    IteratorFixture()
+    {
+        nullPoints.push_back( VECTOR2I( 100,100 ) );
+        nullPoints.push_back( VECTOR2I(   0,100 ) );
+        nullPoints.push_back( VECTOR2I(   0,  0 ) );
 
-          // Create a polygon with its last segment null
-          SHAPE_LINE_CHAIN polyLine;
-          polyLine.Append( nullPoints[0] );
-          polyLine.Append( nullPoints[1] );
-          polyLine.Append( nullPoints[2] );
-          polyLine.Append( nullPoints[2], true );
-          polyLine.SetClosed( true );
+        // Create a polygon with its last segment null
+        SHAPE_LINE_CHAIN polyLine;
+        polyLine.Append( nullPoints[0] );
+        polyLine.Append( nullPoints[1] );
+        polyLine.Append( nullPoints[2] );
+        polyLine.Append( nullPoints[2], true );
+        polyLine.SetClosed( true );
 
-          lastNullSegmentPolySet.AddOutline(polyLine);
+        lastNullSegmentPolySet.AddOutline(polyLine);
 
-          // Create a polygon with its first segment null
-          polyLine.Clear();
-          polyLine.Append( nullPoints[0] );
-          polyLine.Append( nullPoints[0], true );
-          polyLine.Append( nullPoints[1] );
-          polyLine.Append( nullPoints[2] );
-          polyLine.SetClosed( true );
+        // Create a polygon with its first segment null
+        polyLine.Clear();
+        polyLine.Append( nullPoints[0] );
+        polyLine.Append( nullPoints[0], true );
+        polyLine.Append( nullPoints[1] );
+        polyLine.Append( nullPoints[2] );
+        polyLine.SetClosed( true );
 
-          firstNullSegmentPolySet.AddOutline(polyLine);
+        firstNullSegmentPolySet.AddOutline(polyLine);
 
-          // Create a polygon with an inside segment null
-          polyLine.Clear();
-          polyLine.Append( nullPoints[0] );
-          polyLine.Append( nullPoints[1] );
-          polyLine.Append( nullPoints[1], true );
-          polyLine.Append( nullPoints[2] );
-          polyLine.SetClosed( true );
+        // Create a polygon with an inside segment null
+        polyLine.Clear();
+        polyLine.Append( nullPoints[0] );
+        polyLine.Append( nullPoints[1] );
+        polyLine.Append( nullPoints[1], true );
+        polyLine.Append( nullPoints[2] );
+        polyLine.SetClosed( true );
 
-          insideNullSegmentPolySet.AddOutline(polyLine);
-      }
+        insideNullSegmentPolySet.AddOutline(polyLine);
+    }
 
-      ~IteratorFixture(){}
-  };
+    ~IteratorFixture(){}
+};
 
 #endif //__FIXTURES_H

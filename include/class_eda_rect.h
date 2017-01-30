@@ -79,6 +79,7 @@ public:
      * @return true if aPoint is inside the boundary box. A point on a edge is seen as inside
      */
     bool Contains( const wxPoint& aPoint ) const;
+
     /**
      * Function Contains
      * @param x = the x coordinate of the point to test

@@ -108,7 +108,6 @@ BOOST_AUTO_TEST_CASE( TotalVertices )
     BOOST_CHECK_EQUAL( common.holeyPolySet.TotalVertices(), 12 );
 }
 
-
 /**
  * Checks whether the removal of null segments, wherever they are placed, is correct.
  */
@@ -118,7 +117,7 @@ BOOST_AUTO_TEST_CASE( RemoveNullSegments )
                                      firstNullSegmentPolySet,
                                      insideNullSegmentPolySet};
 
-    for(SHAPE_POLY_SET polygonSet : polygonSets)
+    for( SHAPE_POLY_SET polygonSet : polygonSets )
     {
         BOOST_CHECK_EQUAL( polygonSet.TotalVertices(), 4 );
         BOOST_CHECK_EQUAL( polygonSet.RemoveNullSegments(), 1);
@@ -129,5 +128,6 @@ BOOST_AUTO_TEST_CASE( RemoveNullSegments )
         BOOST_CHECK_EQUAL( polygonSet.CVertex(2), nullPoints[2] );
     }
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()

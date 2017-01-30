@@ -277,12 +277,14 @@ const VECTOR2I& SHAPE_POLY_SET::CVertex( int index, int aOutline , int aHole ) c
 }
 
 
-VECTOR2I& SHAPE_POLY_SET::Vertex( SHAPE_POLY_SET::VERTEX_INDEX index ){
+VECTOR2I& SHAPE_POLY_SET::Vertex( SHAPE_POLY_SET::VERTEX_INDEX index )
+{
     return Vertex( index.m_vertex, index.m_polygon, index.m_contour - 1 );
 }
 
 
-const VECTOR2I& SHAPE_POLY_SET::CVertex( SHAPE_POLY_SET::VERTEX_INDEX index ) const{
+const VECTOR2I& SHAPE_POLY_SET::CVertex( SHAPE_POLY_SET::VERTEX_INDEX index ) const
+{
     return CVertex( index.m_vertex, index.m_polygon, index.m_contour - 1 );
 }
 
@@ -294,7 +296,7 @@ SEG SHAPE_POLY_SET::Edge( int aGlobalIndex )
     // If the edge does not exist, abort, it is like an illegal access memory error
     assert( GetRelativeIndices( aGlobalIndex, &indices ) );
 
-    return m_polys[indices.m_polygon][indices.m_contour].Segment(indices.m_vertex);
+    return m_polys[indices.m_polygon][indices.m_contour].Segment( indices.m_vertex );
 }
 
 
@@ -314,7 +316,8 @@ bool SHAPE_POLY_SET::IsPolygonSelfIntersecting( int aPolygonIndex )
         innerIterator = iterator;
 
         // Start in the next segment, we don't want to check collision between a segment and itself
-        for(innerIterator++; innerIterator; innerIterator++) {
+        for( innerIterator++; innerIterator; innerIterator++ )
+        {
             SEG secondSegment = *innerIterator;
 
             // Check whether the two segments built collide
@@ -553,7 +556,7 @@ void SHAPE_POLY_SET::importTree( PolyTree* tree )
             for( unsigned int i = 0; i < n->Childs.size(); i++ )
                 paths.push_back( convertFromClipper( n->Childs[i]->Contour ) );
 
-            m_polys.push_back(paths);
+            m_polys.push_back( paths );
         }
     }
 }
@@ -845,10 +848,10 @@ const std::string SHAPE_POLY_SET::Format() const
     for( unsigned i = 0; i < m_polys.size(); i++ )
     {
         ss << "poly " << m_polys[i].size() << "\n";
-        for( unsigned j = 0; j < m_polys[i].size(); j++)
+        for( unsigned j = 0; j < m_polys[i].size(); j++ )
         {
             ss << m_polys[i][j].PointCount() << "\n";
-            for( int v = 0; v < m_polys[i][j].PointCount(); v++)
+            for( int v = 0; v < m_polys[i][j].PointCount(); v++ )
                 ss << m_polys[i][j].CPoint( v ).x << " " << m_polys[i][j].CPoint( v ).y << "\n";
         }
         ss << "\n";
@@ -951,10 +954,11 @@ bool SHAPE_POLY_SET::PointOnEdge( const VECTOR2I& aP ) const
 
 bool SHAPE_POLY_SET::Collide( const VECTOR2I& aP, int aClearance ) const
 {
-    SHAPE_POLY_SET polySet = SHAPE_POLY_SET(*this);
+    SHAPE_POLY_SET polySet = SHAPE_POLY_SET( *this );
 
     // Inflate the polygon if necessary.
-    if( aClearance > 0 ){
+    if( aClearance > 0 )
+    {
         // fixme: the number of arc segments should not be hardcoded
         polySet.Inflate( aClearance, 8 );
     }
@@ -1064,7 +1068,7 @@ bool SHAPE_POLY_SET::CollideVertex( const VECTOR2I& aPoint,
     // Precompute squared aClearance
     int squaredClearance = aClearance*aClearance;
 
-    for( ITERATOR iterator = IterateWithHoles(); iterator; iterator++)
+    for( ITERATOR iterator = IterateWithHoles(); iterator; iterator++ )
     {
         // Get the difference vector between current vertex and aPoint
         delta = *iterator - aPoint;
@@ -1073,7 +1077,7 @@ bool SHAPE_POLY_SET::CollideVertex( const VECTOR2I& aPoint,
         ecoord squaredDistance = delta.SquaredEuclideanNorm();
 
         // Check for collisions
-        if(squaredDistance <= squaredClearance)
+        if( squaredDistance <= squaredClearance )
         {
             collision = true;
 
@@ -1099,13 +1103,13 @@ bool SHAPE_POLY_SET::CollideEdge( const VECTOR2I& aPoint,
 
     SEGMENT_ITERATOR iterator;
 
-    for (iterator = IterateSegmentsWithHoles(); iterator; iterator++)
+    for( iterator = IterateSegmentsWithHoles(); iterator; iterator++ )
     {
         SEG currentSegment = *iterator;
         int distance = currentSegment.Distance( aPoint );
 
         // Check for collisions
-        if(distance <= aClearance)
+        if( distance <= aClearance )
         {
             collision = true;
 
@@ -1276,7 +1280,7 @@ int SHAPE_POLY_SET::TotalVertices() const
 
 SHAPE_POLY_SET::POLYGON SHAPE_POLY_SET::ChamferPolygon( unsigned int aDistance, int aIndex )
 {
-    return chamferFilletPolygon(CORNER_MODE::CHAMFERED, aDistance, aIndex);
+    return chamferFilletPolygon( CORNER_MODE::CHAMFERED, aDistance, aIndex );
 }
 
 
@@ -1402,7 +1406,7 @@ SHAPE_POLY_SET SHAPE_POLY_SET::Chamfer(  int aDistance )
 {
     SHAPE_POLY_SET chamfered;
 
-    for (unsigned int polygonIdx = 0; polygonIdx < m_polys.size(); polygonIdx++)
+    for( unsigned int polygonIdx = 0; polygonIdx < m_polys.size(); polygonIdx++ )
         chamfered.m_polys.push_back( ChamferPolygon( aDistance, polygonIdx ) );
 
     return chamfered;
@@ -1413,7 +1417,7 @@ SHAPE_POLY_SET SHAPE_POLY_SET::Fillet(  int aRadius, int aSegments )
 {
     SHAPE_POLY_SET filleted;
 
-    for (size_t polygonIdx = 0; polygonIdx < m_polys.size(); polygonIdx++)
+    for( size_t polygonIdx = 0; polygonIdx < m_polys.size(); polygonIdx++ )
         filleted.m_polys.push_back( FilletPolygon( aRadius, aSegments, polygonIdx ) );
 
     return filleted;
@@ -1438,7 +1442,7 @@ SHAPE_POLY_SET::POLYGON SHAPE_POLY_SET::chamferFilletPolygon( CORNER_MODE aMode,
     }
 
     // Iterate through all the contours (outline and holes) of the polygon.
-    for( SHAPE_LINE_CHAIN &currContour : currentPoly)
+    for( SHAPE_LINE_CHAIN &currContour : currentPoly )
     {
         // Generate a new contour in the new polygon
         SHAPE_LINE_CHAIN newContour;

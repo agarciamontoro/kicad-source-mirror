@@ -47,10 +47,10 @@ BOOST_FIXTURE_TEST_SUITE( ChamferFillet, ChamferFilletFixture )
  */
 bool lexicographicOrder( VECTOR2I i, VECTOR2I j )
 {
-    if(i.x != j.x)
-        return(i.x < j.x);
+    if( i.x != j.x )
+        return( i.x < j.x );
     else
-        return(i.y < j.y);
+        return( i.y < j.y );
 }
 
 /**
@@ -154,5 +154,6 @@ BOOST_AUTO_TEST_CASE( Fillet )
         }
     }
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()

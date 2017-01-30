@@ -1168,7 +1168,7 @@ int CPolyLine::HitTestForEdge( const wxPoint& aPos, int aDistMax ) const
         if( m_CornersList.IsEndContour ( item_pos ) || end_segm >= lim )
         {
             unsigned tmp = first_corner_pos;
-            first_corner_pos = end_segm;    // first_corner_pos is now the beginning of the next outline
+            first_corner_pos = end_segm;    // first_corner_pos is the beginning of next outline
             end_segm = tmp;                 // end_segm is the beginning of the current outline
         }
 
