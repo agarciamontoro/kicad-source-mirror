@@ -63,7 +63,8 @@ SHAPE* SHAPE_POLY_SET::Clone() const
 }
 
 
-bool SHAPE_POLY_SET::GetRelativeIndices( int aGlobalIdx, SHAPE_POLY_SET::VERTEX_INDEX* aRelativeIndices )
+bool SHAPE_POLY_SET::GetRelativeIndices( int aGlobalIdx,
+                                         SHAPE_POLY_SET::VERTEX_INDEX* aRelativeIndices )
 {
     int polygonIdx = 0;
     unsigned int contourIdx = 0;
@@ -1051,8 +1052,8 @@ void SHAPE_POLY_SET::Append( const VECTOR2I& aP, int aOutline, int aHole )
 }
 
 
-bool SHAPE_POLY_SET::CollideVertex( const VECTOR2I& aPoint, SHAPE_POLY_SET::VERTEX_INDEX& aClosestVertex,
-                                   int aClearance )
+bool SHAPE_POLY_SET::CollideVertex( const VECTOR2I& aPoint,
+                                    SHAPE_POLY_SET::VERTEX_INDEX& aClosestVertex, int aClearance )
 {
     // Shows whether there was a collision
     bool collision = false;
