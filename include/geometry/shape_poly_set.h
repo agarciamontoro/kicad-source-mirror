@@ -262,7 +262,7 @@ class SHAPE_POLY_SET : public SHAPE
                 }
                 else
                 {
-                    last = _poly->CPolygon( m_currentPolygon )[0].SegmentCount();
+                    last = m_poly->CPolygon( m_currentPolygon )[0].SegmentCount();
                     // If the last vertex of the outline was reached, advance to the following
                     // polygon
                     if( m_currentSegment >= last )
