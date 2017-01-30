@@ -1604,7 +1604,7 @@ void EAGLE_PLUGIN::loadPlain( CPTREE& aGraphics )
                 zone->SetLayer( layer );
                 zone->SetNetCode( NETINFO_LIST::UNCONNECTED );
 
-                CPolyLine::HATCH_STYLE outline_hatch = CPolyLine::DIAGONAL_EDGE;
+                ZONE_CONTAINER::HATCH_STYLE outline_hatch = ZONE_CONTAINER::DIAGONAL_EDGE;
 
                 zone->AppendCorner( wxPoint( kicad_x( r.x1 ), kicad_y( r.y1 ) ) );
                 zone->AppendCorner( wxPoint( kicad_x( r.x2 ), kicad_y( r.y1 ) ) );
@@ -2783,7 +2783,7 @@ void EAGLE_PLUGIN::loadSignals( CPTREE& aSignals )
 
                     // if spacing is set the zone should be hatched
                     if( p.spacing )
-                        zone->SetHatch( CPolyLine::DIAGONAL_EDGE, *p.spacing, true );
+                        zone->SetHatch( ZONE_CONTAINER::DIAGONAL_EDGE, *p.spacing, true );
 
                     // clearances, etc.
                     zone->SetArcSegmentCount( 32 );     // @todo: should be a constructor default?

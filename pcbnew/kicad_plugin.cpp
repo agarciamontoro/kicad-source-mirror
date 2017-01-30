@@ -1519,9 +1519,9 @@ void PCB_IO::format( ZONE_CONTAINER* aZone, int aNestLevel ) const
     switch( aZone->GetHatchStyle() )
     {
     default:
-    case CPolyLine::NO_HATCH:       hatch = "none";    break;
-    case CPolyLine::DIAGONAL_EDGE:  hatch = "edge";    break;
-    case CPolyLine::DIAGONAL_FULL:  hatch = "full";    break;
+    case ZONE_CONTAINER::NO_HATCH:       hatch = "none";    break;
+    case ZONE_CONTAINER::DIAGONAL_EDGE:  hatch = "edge";    break;
+    case ZONE_CONTAINER::DIAGONAL_FULL:  hatch = "full";    break;
     }
 
     m_out->Print( 0, " (hatch %s %s)\n", hatch.c_str(),

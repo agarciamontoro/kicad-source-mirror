@@ -2365,7 +2365,7 @@ ZONE_CONTAINER* BOARD::InsertArea( int netcode, int iarea, LAYER_ID layer, int x
 
     new_area->SetHatchStyle( (ZONE_CONTAINER::HATCH_STYLE) hatch );
     new_area->AppendCorner( wxPoint( x, y ) );
-    
+
     return new_area;
 }
 
@@ -2400,7 +2400,7 @@ bool BOARD::NormalizeAreaPolygon( PICKED_ITEMS_LIST * aNewZonesList, ZONE_CONTAI
                 // Create new copper area and copy poly into it
                 SHAPE_POLY_SET* new_p = new SHAPE_POLY_SET( pa->UnitSet( ip - 1 ) );
                 NewArea = AddArea( aNewZonesList, aCurrArea->GetNetCode(), aCurrArea->GetLayer(),
-                                   wxPoint(0, 0), CPolyLine::NO_HATCH );
+                                   wxPoint(0, 0), ZONE_CONTAINER::NO_HATCH );
 
                 // remove the poly that was automatically created for the new area
                 // and replace it with a poly from NormalizeAreaOutlines

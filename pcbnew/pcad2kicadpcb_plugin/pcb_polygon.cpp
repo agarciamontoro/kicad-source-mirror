@@ -174,7 +174,7 @@ void PCB_POLYGON::AddToBoard()
         zone->SetNetCode( m_netCode );
 
         // add outline
-        int outline_hatch = CPolyLine::DIAGONAL_EDGE;
+        int outline_hatch = ZONE_CONTAINER::DIAGONAL_EDGE;
 
         for( i = 0; i < (int) m_outline.GetCount(); i++ )
         {
